@@ -2,42 +2,46 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Forex Master Pro - Realtime Simulator</title>
+    <title>Forex Master Pro - Realtime Simulation</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #060d0a; --panel: #0b120f; --border: #1e2a24; --green: #00ff88; --red: #ef5350; --text: #d1d4dc; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         /* 상단 바 */
-        header { height: 50px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; }
-        .asset-list { display: flex; gap: 5px; }
-        .nav-btn { background: #16261f; border: 1px solid var(--border); color: var(--text); padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+        header { height: 55px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; }
+        .asset-list { display: flex; gap: 8px; }
+        .nav-btn { background: #16261f; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; cursor: pointer; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .nav-btn:hover { border-color: var(--green); }
 
         #container { display: flex; flex: 1; position: relative; }
 
-        /* 좌측 툴박스 */
-        .toolbar { width: 45px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 15px; gap: 20px; }
-        .tool-btn { color: #555; cursor: pointer; font-size: 18px; }
+        /* 좌측 드로잉 툴바 */
+        .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 25px; }
+        .tool-btn { color: #444; cursor: pointer; font-size: 18px; transition: 0.2s; }
         .tool-btn:hover { color: var(--green); }
+        .active-tool { color: var(--green); }
 
-        /* 차트 영역 */
+        /* 차트 및 컨트롤러 */
         #chart-area { flex: 1; position: relative; }
-
-        /* 플로팅 컨트롤러 (드래그 가능) */
         #floating-ctrl {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(11, 18, 15, 0.95); border: 1px solid var(--border);
-            padding: 8px 20px; border-radius: 30px; z-index: 2000; display: flex; align-items: center; gap: 15px; cursor: move; box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(11, 18, 15, 0.9); border: 1px solid var(--border);
+            padding: 10px 25px; border-radius: 40px; z-index: 2000; display: flex; align-items: center; gap: 20px; cursor: move; box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px);
         }
-        .play-btn { background: var(--green); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; }
-        .speed-sel { background: #1a2e25; border: none; color: white; padding: 3px 8px; border-radius: 10px; font-size: 11px; outline: none; }
+        .play-btn { background: var(--green); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .speed-sel { background: #1a2e25; border: 1px solid var(--border); color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px; outline: none; }
 
-        /* 우측 패널 */
-        .right-panel { width: 280px; background: var(--panel); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 15px; }
-        .price-card { background: #060d0a; border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; }
-        .btn-trade { padding: 12px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; width: 48%; }
-        .ad-box { flex: 1; border: 1px dashed #333; display: flex; align-items: center; justify-content: center; color: #444; font-size: 12px; margin-top: 10px; }
+        /* 우측 매매 패널 */
+        .right-panel { width: 300px; background: var(--panel); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .price-display { background: #060d0a; border: 1px solid var(--border); padding: 20px; border-radius: 12px; text-align: center; }
+        .trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-buy { background: var(--green); color: black; font-weight: bold; border: none; padding: 15px; border-radius: 8px; cursor: pointer; }
+        .btn-sell { background: var(--red); color: white; font-weight: bold; border: none; padding: 15px; border-radius: 8px; cursor: pointer; }
+        
+        /* 광고 영역 */
+        .ad-space { flex: 1; border: 1px dashed #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #444; font-size: 11px; text-align: center; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -48,24 +52,25 @@
         <button class="nav-btn" onclick="loadPair('GBPUSDT')">GBP/USD</button>
         <button class="nav-btn" onclick="loadPair('USDJPY')">USD/JPY</button>
         <button class="nav-btn" onclick="loadPair('BTCUSDT')">BTC/USD</button>
-        <button class="nav-btn"><i class="fas fa-plus"></i> Indicators</button>
+        <button class="nav-btn" style="color:var(--green)"><i class="fas fa-chart-line"></i> + Indicators</button>
     </div>
-    <div id="top-price" style="font-family:monospace; color:var(--green); font-weight:bold;">0.00000</div>
+    <div style="color:var(--green); font-weight:bold; font-family:monospace; font-size:18px;" id="header-price">0.00000</div>
 </header>
 
 <div id="container">
     <div class="toolbar">
-        <i class="fas fa-mouse-pointer tool-btn" style="color:var(--green)"></i>
-        <i class="fas fa-pen tool-btn"></i>
-        <i class="fas fa-vector-square tool-btn"></i>
-        <i class="fas fa-chart-pie tool-btn"></i>
-        <i class="fas fa-eraser tool-btn" title="지우개"></i>
+        <i class="fas fa-mouse-pointer tool-btn active-tool"></i>
+        <i class="fas fa-slash tool-btn" title="Trend Line"></i>
+        <i class="fas fa-square tool-btn" title="Rectangle"></i>
+        <i class="fas fa-circle tool-btn" title="Circle"></i>
+        <i class="fas fa-arrow-up tool-btn" title="Arrow"></i>
+        <i class="fas fa-eraser tool-btn" title="Eraser"></i>
     </div>
 
     <div id="chart-area">
         <div id="floating-ctrl">
             <button class="play-btn" onclick="togglePlay()"><i class="fas fa-play" id="p-icon"></i></button>
-            <select class="speed-sel" onchange="setSpeed(this.value)">
+            <select class="speed-sel" id="speed-set" onchange="setSpeed(this.value)">
                 <option value="0.5">0.5x</option>
                 <option value="1" selected>1x</option>
                 <option value="2">2x</option>
@@ -73,41 +78,47 @@
                 <option value="10">10x</option>
                 <option value="50">50x</option>
             </select>
-            <span id="chart-time" style="font-size:11px; color:#666; font-family:monospace;">READY</span>
+            <div style="font-size:12px; color:#888; font-family:monospace; min-width:140px;" id="sim-time">READY</div>
         </div>
     </div>
 
     <aside class="right-panel">
-        <div class="price-card">
-            <div style="font-size:11px; color:#666; margin-bottom:5px;">REALTIME PRICE</div>
-            <div id="side-price" style="font-size:22px; font-weight:bold; color:var(--green);">0.00000</div>
+        <div class="price-display">
+            <div style="font-size:11px; color:#666; margin-bottom:8px;">REALTIME MARKET PRICE</div>
+            <div id="side-price" style="font-size:28px; font-weight:bold; color:var(--green); letter-spacing:1px;">0.00000</div>
         </div>
-        <div style="display:flex; justify-content:space-between;">
-            <button class="btn-trade" style="background:var(--red);">SELL</button>
-            <button class="btn-trade" style="background:var(--green);">BUY</button>
+
+        <div class="trade-btns">
+            <button class="btn-sell">SELL<br><small>1.08450</small></button>
+            <button class="btn-buy">BUY<br><small>1.08452</small></button>
         </div>
-        <div class="ad-box">CPC AD SPACE (Side)</div>
-        <div class="ad-box" style="max-height: 80px;">AD (Bottom)</div>
+
+        <div class="ad-space">CPC AD SPACE<br>(Side Banner)</div>
+        <div class="ad-space" style="max-height: 90px;">CPC AD SPACE<br>(Bottom Banner)</div>
     </aside>
 </div>
 
 <script>
-    // 1. 차트 엔진 초기화
+    // 1. 차트 엔진 초기화 및 스케일 오류 방지 설정
     const chart = LightweightCharts.createChart(document.getElementById('chart-area'), {
         layout: { background: { color: '#060d0a' }, textColor: '#d1d4dc' },
         grid: { vertLines: { color: '#111b16' }, horzLines: { color: '#111b16' } },
-        timeScale: { borderColor: '#1e2a24', timeVisible: true },
-        rightPriceScale: { borderColor: '#1e2a24', autoScale: true } // 자동 스케일링 활성화
+        timeScale: { borderColor: '#1e2a24', timeVisible: true, rightOffset: 12 },
+        rightPriceScale: { 
+            borderColor: '#1e2a24', 
+            autoScale: true, // 가격 자동 조정 활성화
+            scaleMargins: { top: 0.1, bottom: 0.1 } 
+        }
     });
 
     const candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
         upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350',
-        priceFormat: { type: 'price', precision: 5, minMove: 0.00001 } // 환율 정밀도 설정
+        priceFormat: { type: 'price', precision: 5, minMove: 0.00001 }
     });
 
-    let allData = [], idx = 100, isPlaying = false, speed = 1, progress = 0, lastT = 0, curH = 0, curL = 0;
+    let allData = [], idx = 100, isPlaying = false, playbackSpeed = 1, progress = 0, lastFrame = 0, curH = 0, curL = 0;
 
-    // 2. 실제 데이터 로드 (바이낸스)
+    // 2. 실전 데이터 로드
     async function loadPair(symbol) {
         isPlaying = false;
         document.getElementById('p-icon').className = 'fas fa-play';
@@ -117,56 +128,64 @@
             allData = raw.map(d => ({
                 time: d[0] / 1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4])
             }));
-            idx = 150;
+            idx = 200; // 과거 데이터 200개부터 시작
             candleSeries.setData(allData.slice(0, idx));
-            chart.timeScale().fitContent(); // 초기 화면 꽉 차게 조정
-            updateInfo();
-        } catch (e) { alert("데이터 로드 실패"); }
+            chart.timeScale().fitContent(); // 화면에 꽉 차게 비율 조정
+            updateUI();
+        } catch (e) { alert("Data Load Failed"); }
     }
 
-    // 3. 틱 애니메이션 루프
-    function animate(t) {
+    // 3. 고도화된 틱 애니메이션 (Fast Forward & Scale Fix)
+    function runLoop(t) {
         if (!isPlaying) return;
-        if (!lastT) lastT = t;
-        const dt = (t - lastT) / 1000;
-        lastT = t;
+        if (!lastFrame) lastFrame = t;
+        const delta = (t - lastFrame) / 1000;
+        lastFrame = t;
         
-        progress += dt * speed;
+        progress += delta * (playbackSpeed * 0.8); // 배속에 따른 진행도
+
         if (progress >= 1) {
-            while(progress >= 1) { progress -= 1; idx++; if (idx >= allData.length) { isPlaying=false; return; } }
-            curH = allData[idx].open; curL = allData[idx].open;
+            while(progress >= 1) { 
+                progress -= 1; 
+                idx++; 
+                if (idx >= allData.length) { isPlaying=false; return; } 
+            }
+            curH = allData[idx].open; 
+            curL = allData[idx].open;
         }
 
-        const candle = allData[idx];
-        let price = (progress < 0.5) ? candle.open + (candle.high - candle.open) * (progress * 2) : candle.high - (candle.high - candle.close) * ((progress - 0.5) * 2);
-        curH = Math.max(curH, price); curL = Math.min(curL, price);
+        const c = allData[idx];
+        // 캔들 내부 실시간 가격 시뮬레이션
+        let price = (progress < 0.5) ? c.open + (c.high - c.open) * (progress * 2) : c.high - (c.high - c.close) * ((progress - 0.5) * 2);
+        curH = Math.max(curH, price); 
+        curL = Math.min(curL, price);
         
-        candleSeries.update({ time: candle.time, open: candle.open, high: curH, low: curL, close: price });
-        updateInfo(price);
-        requestAnimationFrame(animate);
+        candleSeries.update({ time: c.time, open: c.open, high: curH, low: curL, close: price });
+        updateUI(price);
+        requestAnimationFrame(runLoop);
     }
 
-    function updateInfo(p) {
+    function updateUI(p) {
         const val = p ? p.toFixed(5) : allData[idx].close.toFixed(5);
-        document.getElementById('top-price').innerText = val;
+        document.getElementById('header-price').innerText = val;
         document.getElementById('side-price').innerText = val;
-        document.getElementById('chart-time').innerText = new Date(allData[idx].time * 1000).toLocaleString();
+        document.getElementById('sim-time').innerText = new Date(allData[idx].time * 1000).toLocaleString('ko-KR');
     }
 
     function togglePlay() {
         isPlaying = !isPlaying;
         document.getElementById('p-icon').className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
-        if (isPlaying) { lastT = 0; requestAnimationFrame(animate); }
+        if (isPlaying) { lastFrame = 0; requestAnimationFrame(runLoop); }
     }
 
-    function setSpeed(v) { speed = parseFloat(v); }
+    function setSpeed(v) { playbackSpeed = parseFloat(v); }
 
-    // 4. 드래그 로직
+    // 4. 컨트롤러 드래그
     const ctrl = document.getElementById('floating-ctrl');
-    let move = false, ox, oy;
-    ctrl.onmousedown = (e) => { if(e.target.tagName==='SELECT') return; move=true; ox=e.clientX-ctrl.offsetLeft; oy=e.clientY-ctrl.offsetTop; };
-    document.onmousemove = (e) => { if(move){ ctrl.style.left=(e.clientX-ox)+'px'; ctrl.style.top=(e.clientY-oy)+'px'; ctrl.style.bottom='auto'; ctrl.style.transform='none'; } };
-    document.onmouseup = () => move=false;
+    let isMoving = false, ox, oy;
+    ctrl.onmousedown = (e) => { if(e.target.tagName==='SELECT') return; isMoving=true; ox=e.clientX-ctrl.offsetLeft; oy=e.clientY-ctrl.offsetTop; };
+    document.onmousemove = (e) => { if(isMoving){ ctrl.style.left=(e.clientX-ox)+'px'; ctrl.style.top=(e.clientY-oy)+'px'; ctrl.style.bottom='auto'; ctrl.style.transform='none'; } };
+    document.onmouseup = () => isMoving = false;
 
     loadPair('EURUSDT');
 </script>
