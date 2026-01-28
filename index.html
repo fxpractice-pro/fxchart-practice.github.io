@@ -1,142 +1,186 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+    <meta charset="UTF-8">
+    <title>ForexPractice - Master Layout</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* 이미지에서 추출한 정확한 색상 시스템 */
+        /* [핵심 색상 시스템 추출] */
         :root {
-            --bg-deep: #0b120f;        /* 메인 배경 (짙은 녹색조 검정) */
-            --card-inner: #161b18;     /* 카드 내부 배경 */
-            --border-line: #2d3531;    /* 경계선 색상 */
-            --neon-green: #00ff88;     /* BUY 버튼 & 포인트 컬러 */
-            --action-red: #ff4d4d;      /* SELL 버튼 컬러 */
-            --text-main: #ffffff;
-            --text-dim: #8b949e;
-            --ad-btn-blue: #3366ff;    /* 광고 버튼 파란색 */
+            --stitch-black: #0d1110;      /* 상단 바 배경 */
+            --main-dark: #0a0f0d;        /* 전체 배경 */
+            --box-bg: #141a17;           /* 시뮬레이터 박스 배경 */
+            --input-bg: #1c2420;         /* 입력창 배경 */
+            --active-green: #00ff88;     /* 핵심 포인트 & BUY */
+            --sell-red: #ff4d4d;          /* SELL 버튼 */
+            --text-dim: #8b949e;         /* 비활성 텍스트 */
+            --share-pink: #f8daff;       /* 공유 버튼 */
+            --border: #1f2328;           /* 경계선 */
         }
 
-        body { background: #000; margin: 0; padding: 20px; display: flex; justify-content: flex-end; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; background: var(--main-dark); color: #fff; font-family: -apple-system, system-ui, sans-serif; overflow: hidden; height: 100vh; }
 
-        /* 우측 사이드바 컨테이너 */
-        .sidebar-right {
-            width: 320px; background: var(--bg-deep); border: 1px solid var(--border-line);
-            border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 15px;
+        /* 1. 최상단 Stitch 바 */
+        .top-stitch-bar {
+            height: 44px; background: #000; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; padding: 0 16px; justify-content: space-between;
         }
+        .st-logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+        .st-logo span { background: #21262d; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; color: var(--text-dim); }
+        .st-icons { display: flex; gap: 24px; color: var(--text-dim); font-size: 16px; }
+        .btn-share { background: var(--share-pink); color: #000; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        /* 타이틀 바 */
-        .sim-header { display: flex; justify-content: space-between; align-items: center; }
-        .sim-header h2 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
-        .live-badge { 
-            background: rgba(0, 255, 136, 0.1); color: var(--neon-green); 
-            font-size: 10px; font-weight: 800; padding: 2px 6px; 
-            border: 1px solid var(--neon-green); border-radius: 4px;
+        /* 2. 메인 서비스 헤더 */
+        .fp-header {
+            height: 64px; background: var(--main-dark); display: flex; align-items: center; padding: 0 20px; gap: 20px;
         }
+        .fp-logo { color: #fff; font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 8px; }
+        .fp-logo i { color: var(--active-green); }
+        .search-container { background: var(--input-bg); border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; width: 220px; }
+        .search-container input { background: none; border: none; color: #fff; font-size: 14px; outline: none; }
+        .nav-links { display: flex; gap: 24px; font-weight: 600; font-size: 14px; color: #fff; margin-left: 20px; }
+        .user-stats { margin-left: auto; display: flex; align-items: center; gap: 15px; }
+        .balance-chip { background: #161b18; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 14px; }
 
-        /* Balance & Equity 영역 */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-box { background: var(--card-inner); border: 1px solid var(--border-line); border-radius: 8px; padding: 12px; }
-        .stat-box label { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 5px; }
-        .stat-box span { font-size: 15px; font-weight: 700; color: #fff; }
+        /* 3. 광고 & 컨트롤 바 */
+        .ad-row { height: 34px; background: var(--main-dark); text-align: center; font-size: 11px; color: var(--text-dim); padding-top: 5px; }
+        .ad-row b { color: var(--active-green); }
+        .control-bar { height: 48px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 15px; }
+        .tf-btn { background: #000; border: 1px solid var(--border); color: var(--text-dim); padding: 5px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .tf-btn.active { background: var(--active-green); color: #000; font-weight: bold; border-color: var(--active-green); }
 
-        /* 입력 폼 */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .form-group label { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 6px; }
-        .form-group input { 
-            width: 100%; background: #0d1117; border: 1px solid #30363d; 
-            border-radius: 6px; padding: 10px; color: #fff; font-weight: 600; box-sizing: border-box;
-        }
-
-        /* SELL & BUY 버튼 (이미지 1:1 재현) */
-        .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
-        .btn-trade { border: none; border-radius: 6px; padding: 14px; cursor: pointer; text-align: center; transition: 0.2s; }
-        .btn-trade:hover { opacity: 0.8; }
-        .btn-sell { background: var(--action-red); color: #fff; }
-        .btn-buy { background: var(--neon-green); color: #000; }
-        .btn-trade .side-label { font-size: 10px; font-weight: 900; display: block; margin-bottom: 2px; }
-        .btn-trade .price-val { font-size: 15px; font-weight: 900; }
-
-        .pnl-footer { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); padding-top: 10px; border-top: 1px dashed #30363d; }
-
-        /* SPONSORED 광고 섹션 (가장 중요한 부분) */
-        .sponsored-title { font-size: 11px; color: var(--text-dim); font-weight: 800; margin-top: 15px; display: block; }
+        /* 4. 메인 컨텐츠 영역 */
+        .main-view { display: flex; height: calc(100vh - 190px); }
         
-        .ad-card { 
-            background: #111814; border: 1px solid var(--border-line); border-radius: 12px; 
-            padding: 24px 16px; text-align: center; position: relative; margin-top: 10px;
-        }
-        .ad-tag { position: absolute; top: 12px; right: 12px; font-size: 9px; color: #444; background: #000; padding: 2px 5px; border-radius: 3px; }
-        .ad-icon { width: 50px; height: 50px; background: rgba(0, 255, 136, 0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-        .ad-icon i { color: var(--neon-green); font-size: 28px; }
-        .ad-card h3 { font-size: 16px; color: #fff; margin: 0 0 10px 0; font-weight: 700; }
-        .ad-card p { font-size: 12px; color: var(--text-dim); line-height: 1.5; margin: 0 0 20px 0; }
-        .btn-ad-blue { background: var(--ad-btn-blue); color: #fff; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; }
-        .btn-ad-green { background: var(--neon-green); color: #000; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        /* 왼쪽 사이드바 */
+        .side-tools { width: 48px; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 25px; color: var(--text-dim); }
+        .side-tools i:hover { color: #fff; cursor: pointer; }
+
+        /* 차트 중앙 영역 */
+        .chart-container { flex: 1; background: #000; position: relative; }
+
+        /* [핵심] 우측 시뮬레이터 */
+        .sidebar-right { width: 340px; border-left: 1px solid var(--border); background: var(--main-dark); padding: 16px; overflow-y: auto; }
+        .sim-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .sim-title-row h3 { font-size: 15px; margin: 0; }
+        .live-tag { border: 1px solid var(--active-green); color: var(--active-green); font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: 800; }
+        
+        .stat-card { background: var(--box-bg); border-radius: 8px; padding: 12px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box label { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 5px; }
+        .stat-box div { font-weight: 700; font-size: 15px; }
+
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .in-field input { width: 100%; background: var(--input-bg); border: 1px solid #2d3531; border-radius: 6px; padding: 10px; color: #fff; font-weight: 600; box-sizing: border-box; }
+
+        .trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .t-btn { border: none; padding: 12px; border-radius: 6px; cursor: pointer; text-align: center; }
+        .sell { background: var(--sell-red); color: #fff; }
+        .buy { background: var(--active-green); color: #000; }
+        .t-btn div:first-child { font-size: 10px; font-weight: 900; }
+        .t-btn div:last-child { font-size: 15px; font-weight: 900; }
+
+        /* [광고] CPC 섹션 */
+        .sponsored-label { font-size: 10px; color: var(--text-dim); font-weight: 800; margin: 25px 0 12px; display: block; }
+        .ad-card { background: #111814; border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; position: relative; }
+        .ad-badge { position: absolute; top: 10px; right: 10px; font-size: 9px; color: #444; }
+        .ad-icon { font-size: 36px; color: var(--active-green); margin-bottom: 15px; }
+        .ad-card h4 { margin: 0 0 8px 0; font-size: 16px; }
+        .ad-card p { font-size: 12px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.5; }
+        .btn-apply { background: var(--active-green); color: #000; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: 800; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="sidebar-right">
-    <div class="sim-header">
-        <h2>Market Simulator</h2>
-        <span class="live-badge">LIVE</span>
+<div class="top-stitch-bar">
+    <div class="st-logo">Stitch <span>BETA</span></div>
+    <div class="st-icons">
+        <i class="fas fa-mobile-alt"></i>
+        <i class="fas fa-tablet-alt"></i>
+        <i class="fas fa-desktop" style="color: #448aff;"></i>
+        <i class="fas fa-external-link-alt"></i>
+        <i class="fas fa-th-large"></i>
     </div>
-
-    <div class="stat-grid">
-        <div class="stat-box">
-            <label>Balance</label>
-            <span>$10,000.00</span>
-        </div>
-        <div class="stat-box">
-            <label>Equity</label>
-            <span>$10,000.00</span>
-        </div>
-    </div>
-
-    <div class="form-grid">
-        <div class="form-group">
-            <label>Lots</label>
-            <input type="text" value="1.00">
-        </div>
-        <div class="form-group">
-            <label>Risk %</label>
-            <input type="text" value="1.0">
-        </div>
-    </div>
-
-    <div class="trade-grid">
-        <button class="btn-trade btn-sell">
-            <span class="side-label">SELL</span>
-            <span class="price-val">1.08450</span>
-        </button>
-        <button class="btn-trade btn-buy">
-            <span class="side-label">BUY</span>
-            <span class="price-val">1.08454</span>
-        </button>
-    </div>
-
-    <div class="pnl-footer">
-        <span>Open P&L</span>
-        <span style="color:#fff; font-weight:700;">0.00</span>
-    </div>
-
-    <span class="sponsored-title">SPONSORED</span>
-    
-    <div class="ad-card">
-        <span class="ad-tag">Ad</span>
-        <div class="ad-icon"><i class="fas fa-piggy-bank"></i></div>
-        <h3>High Yield Savings</h3>
-        <p>Earn up to 5.5% APY with our premium partner banks. FDIC Insured.</p>
-        <button class="btn-ad-green">Apply Now</button>
-    </div>
-
-    <div class="ad-card" style="background: #0d1117;">
-        <span class="ad-tag">Ad</span>
-        <div class="ad-icon" style="background: rgba(51, 102, 255, 0.1);"><i class="fas fa-rocket" style="color:#3366ff"></i></div>
-        <h3>Pro Trading Signals</h3>
-        <p>Get 90% accurate signals daily from our expert analysts.</p>
-        <button class="btn-ad-blue">Start Free Trial</button>
-    </div>
+    <button class="btn-share"><i class="fas fa-lock"></i> 공유</button>
 </div>
+
+<header class="fp-header">
+    <div class="fp-logo"><i class="fas fa-layer-group"></i> ForexPractice</div>
+    <div class="search-container">
+        <i class="fas fa-search" style="color:var(--text-dim)"></i>
+        <input type="text" value="EUR/USD" readonly>
+    </div>
+    <div class="nav-links">
+        <span>Dashboard</span>
+        <span>Analysis</span>
+        <span>Community</span>
+    </div>
+    <div class="user-stats">
+        <div class="balance-chip"><i class="fas fa-wallet" style="color:var(--active-green)"></i> $10,000.00</div>
+        <i class="far fa-bell" style="color:var(--text-dim); font-size: 18px;"></i>
+        <i class="fas fa-cog" style="color:var(--text-dim); font-size: 18px;"></i>
+        <img src="https://via.placeholder.com/32" style="border-radius:50%; border: 1px solid #444;">
+    </div>
+</header>
+
+<div class="ad-row">ADVERTISEMENT | Global FX Broker - <b>0.0 Pips Spread</b> & Instant Execution. <u style="cursor:pointer">Open Account</u></div>
+
+<div class="control-bar">
+    <button class="tf-btn">1m</button>
+    <button class="tf-btn">5m</button>
+    <button class="tf-btn">15m</button>
+    <button class="tf-btn active">1h</button>
+    <button class="tf-btn">4h</button>
+    <button class="tf-btn">D</button>
+    <div style="width: 1px; height: 20px; background: var(--border); margin: 0 10px;"></div>
+    <span style="font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-chart-line"></i> Indicators
+    </span>
+</div>
+
+<main class="main-view">
+    <div class="side-tools">
+        <i class="fas fa-mouse-pointer" style="color:var(--active-green)"></i>
+        <i class="fas fa-pencil-alt"></i>
+        <i class="fas fa-slash"></i>
+        <i class="fas fa-eraser"></i>
+        <i class="fas fa-font"></i>
+        <i class="fas fa-draw-polygon"></i>
+    </div>
+    
+    <div class="chart-container">
+        </div>
+
+    <aside class="sidebar-right">
+        <div class="sim-title-row">
+            <h3>Market Simulator</h3>
+            <span class="live-tag">LIVE</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-box"><label>Balance</label><div>$10,000.00</div></div>
+            <div class="stat-box"><label>Equity</label><div>$10,000.00</div></div>
+        </div>
+        <div class="input-row">
+            <div class="in-field"><label>Lots</label><input type="text" value="1.00"></div>
+            <div class="in-field"><label>Risk %</label><input type="text" value="1.0"></div>
+        </div>
+        <div class="trade-btns">
+            <div class="t-btn sell"><div>SELL</div><div>1.08450</div></div>
+            <div class="t-btn buy"><div>BUY</div><div>1.08454</div></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-dim); margin-top:15px; border-top:1px dashed #333; padding-top:10px;">
+            <span>Open P&L</span><span>0.00</span>
+        </div>
+
+        <span class="sponsored-label">SPONSORED</span>
+        <div class="ad-card">
+            <span class="ad-badge">Ad</span>
+            <div class="ad-icon"><i class="fas fa-piggy-bank"></i></div>
+            <h4>High Yield Savings</h4>
+            <p>Earn up to 5.5% APY with our premium partner banks. FDIC Insured.</p>
+            <button class="btn-apply">Apply Now</button>
+        </div>
+    </aside>
+</main>
 
 </body>
 </html>
