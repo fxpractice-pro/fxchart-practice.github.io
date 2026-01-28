@@ -2,134 +2,141 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Forex Master Pro - Stitch Style</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* 이미지와 똑같은 색상값 추출 */
+        /* 기존 root 변수에 우측 영역 색상 추가 */
         :root {
             --stitch-black: #000000;
-            --header-dark: #0b120f; /* ForexPractice 헤더의 짙은 녹색조 검정 */
+            --header-dark: #0b120f;
+            --card-bg: #161b18; /* 시뮬레이터 내부 박스 배경 */
             --active-green: #00ff88;
+            --sell-red: #ff4d4d;
             --text-gray: #8b949e;
             --border-color: #1f2328;
-            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
-        body, html { margin: 0; padding: 0; background: var(--stitch-black); color: #fff; font-family: var(--font-main); overflow: hidden; }
-
-        /* 1. 최상단 Stitch 바 (BETA) */
-        .stitch-top {
-            height: 44px; background: var(--stitch-black); border-bottom: 1px solid #161b22;
-            display: flex; align-items: center; padding: 0 16px; justify-content: space-between;
-        }
-        .s-logo { font-weight: 800; font-size: 19px; letter-spacing: -0.5px; }
-        .s-logo span { background: #21262d; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; color: var(--text-gray); font-weight: 400; }
-        .s-icons { display: flex; gap: 24px; color: var(--text-gray); font-size: 15px; }
-        .s-icons i:hover { color: #fff; cursor: pointer; }
-        .btn-share { background: #f8daff; color: #000; border: none; padding: 5px 14px; border-radius: 7px; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-
-        /* 2. ForexPractice 메인 헤더 (이미지의 둥근 직사각형 레이아웃) */
-        .fp-main-header {
-            height: 64px; background: var(--header-dark); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; padding: 0 20px; gap: 30px;
-        }
-        .fp-logo-area { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; }
-        .fp-logo-icon { color: var(--active-green); font-size: 24px; }
+        /* 전체 레이아웃 구성을 위한 flex 설정 */
+        .main-container { display: flex; height: calc(100vh - 194px); background: #000; }
         
-        .fp-search-bar {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px; padding: 8px 15px; display: flex; align-items: center; gap: 12px; width: 240px;
-        }
-        .fp-search-bar input { background: none; border: none; color: #fff; font-size: 14px; outline: none; font-weight: 500; }
+        /* 왼쪽 차트 영역 (가상) */
+        .chart-area { flex: 1; border-right: 1px solid var(--border-color); position: relative; }
+
+        /* [핵심] 우측 사이드바 영역 */
+        .sidebar-right { width: 320px; background: var(--header-dark); padding: 20px; display: flex; flex-direction: column; gap: 20px; border-left: 1px solid var(--border-color); }
+
+        /* Market Simulator 타이틀 */
+        .sidebar-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .sidebar-title h2 { font-size: 16px; font-weight: 700; margin: 0; color: #fff; }
+        .live-badge { background: rgba(0, 255, 136, 0.1); color: var(--active-green); font-size: 10px; font-weight: 800; padding: 2px 6px; border: 1px solid var(--active-green); border-radius: 4px; }
+
+        /* 시뮬레이터 카드 스테츠 */
+        .simulator-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-item label { display: block; color: var(--text-gray); font-size: 11px; margin-bottom: 5px; }
+        .stat-item span { font-size: 14px; font-weight: 700; color: #fff; }
+
+        /* 입력창 영역 */
+        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .input-box label { display: block; color: var(--text-gray); font-size: 11px; margin-bottom: 5px; }
+        .input-box input { width: 100%; background: #000; border: 1px solid #333; border-radius: 6px; padding: 10px; color: #fff; font-weight: 600; box-sizing: border-box; }
+
+        /* SELL / BUY 버튼 */
+        .trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .btn-trade { border: none; border-radius: 6px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .btn-sell { background: var(--sell-red); color: #fff; }
+        .btn-buy { background: var(--active-green); color: #000; }
+        .btn-trade .side { font-size: 10px; font-weight: 800; }
+        .btn-trade .price { font-size: 14px; font-weight: 800; }
+
+        .open-pnl { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-gray); }
+
+        /* [핵심] SPONSORED CPC 광고 영역 */
+        .sponsored-section { margin-top: 10px; }
+        .sponsored-label { font-size: 10px; color: var(--text-gray); font-weight: 800; letter-spacing: 1px; margin-bottom: 15px; display: block; }
         
-        .fp-nav { display: flex; gap: 24px; font-size: 15px; font-weight: 600; color: #fff; }
-        .fp-nav span { cursor: pointer; transition: 0.2s; }
-        .fp-nav span:hover { color: var(--active-green); }
-
-        .fp-user-stats { margin-left: auto; display: flex; align-items: center; gap: 18px; }
-        .balance-box { background: rgba(255,255,255,0.07); padding: 8px 14px; border-radius: 8px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); }
-
-        /* 3. 광고 영역 (ADVERTISEMENT) */
-        .ad-line {
-            height: 38px; background: var(--stitch-black); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-gray); letter-spacing: 0.3px;
+        .ad-card { 
+            background: linear-gradient(145deg, #111, #080d0b);
+            border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            position: relative;
         }
-        .ad-line b { color: var(--active-green); font-weight: 600; }
-        .ad-line u { cursor: pointer; margin-left: 4px; color: #fff; }
-
-        /* 4. 차트 도구 바 (시간대 및 지표) */
-        .chart-tool-bar {
-            height: 48px; background: var(--header-dark); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; padding: 0 16px; gap: 12px;
+        .ad-icon-box { 
+            width: 48px; height: 48px; background: rgba(0, 255, 136, 0.1); 
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 15px; border: 1px solid rgba(0, 255, 136, 0.2);
         }
-        .tf-pill-box { display: flex; background: #000; padding: 3px; border-radius: 6px; border: 1px solid #21262d; }
-        .tf-pill { background: none; border: none; color: var(--text-gray); padding: 5px 11px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .tf-pill.active { background: var(--active-green); color: #000; }
-        
-        .indicator-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #fff; margin-left: 15px; cursor: pointer; }
+        .ad-icon-box i { color: var(--active-green); font-size: 24px; }
+        .ad-card h3 { font-size: 15px; margin: 0 0 8px 0; color: #fff; }
+        .ad-card p { font-size: 12px; color: var(--text-gray); margin: 0 0 15px 0; line-height: 1.4; }
+        .btn-ad-action { background: #3366ff; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; }
+        .ad-badge { position: absolute; top: 10px; right: 10px; font-size: 9px; color: #444; }
     </style>
 </head>
 <body>
 
-<div class="stitch-top">
-    <div class="s-logo">Stitch <span>BETA</span></div>
-    <div class="s-icons">
-        <i class="fas fa-mobile-alt"></i>
-        <i class="fas fa-tablet-alt"></i>
-        <i class="fas fa-desktop" style="color: #448aff;"></i>
-        <i class="fas fa-external-link-alt"></i>
-        <i class="fas fa-th-large"></i>
-    </div>
-    <button class="btn-share"><i class="fas fa-lock"></i> 공유</button>
-</div>
-
-<div class="fp-main-header">
-    <div class="fp-logo-area">
-        <i class="fas fa-layer-group fp-logo-icon"></i>
-        <span>ForexPractice</span>
-    </div>
-    <div class="fp-search-bar">
-        <i class="fas fa-search" style="color:var(--text-gray); font-size: 14px;"></i>
-        <input type="text" value="EUR/USD" readonly>
-    </div>
-    <div class="fp-nav">
-        <span>Dashboard</span>
-        <span>Analysis</span>
-        <span>Community</span>
-    </div>
-    <div class="fp-user-stats">
-        <div class="balance-box">
-            <i class="fas fa-wallet" style="color:var(--active-green)"></i> $10,000.00
+<div class="main-container">
+    <div class="chart-area">
         </div>
-        <i class="far fa-bell" style="color:var(--text-gray); font-size: 18px; cursor:pointer;"></i>
-        <i class="fas fa-cog" style="color:var(--text-gray); font-size: 18px; cursor:pointer;"></i>
-        <div style="width:32px; height:32px; border-radius:50%; background:#444; border:1px solid #555; overflow:hidden; cursor:pointer;">
-            <img src="https://via.placeholder.com/32" alt="p">
+
+    <div class="sidebar-right">
+        <div class="sidebar-title">
+            <h2>Market Simulator</h2>
+            <span class="live-badge">LIVE</span>
+        </div>
+
+        <div class="simulator-card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <label>Balance</label>
+                    <span>$10,000.00</span>
+                </div>
+                <div class="stat-item">
+                    <label>Equity</label>
+                    <span>$10,000.00</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div class="input-box">
+                    <label>Lots</label>
+                    <input type="text" value="1.00">
+                </div>
+                <div class="input-box">
+                    <label>Risk %</label>
+                    <input type="text" value="1.0">
+                </div>
+            </div>
+
+            <div class="trade-btns">
+                <button class="btn-trade btn-sell">
+                    <span class="side">SELL</span>
+                    <span class="price">1.08450</span>
+                </button>
+                <button class="btn-trade btn-buy">
+                    <span class="side">BUY</span>
+                    <span class="price">1.08454</span>
+                </button>
+            </div>
+
+            <div class="open-pnl">
+                <span>Open P&L</span>
+                <span style="color:#fff; font-weight:700;">0.00</span>
+            </div>
+        </div>
+
+        <div class="sponsored-section">
+            <span class="sponsored-label">SPONSORED</span>
+            <div class="ad-card">
+                <span class="ad-badge">Ad</span>
+                <div class="ad-icon-box">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <h3>High Yield Savings</h3>
+                <p>Earn up to 5.5% APY with our premium partner banks. FDIC Insured.</p>
+                <button class="btn-ad-action">Start Free Trial</button>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="ad-line">
-    ADVERTISEMENT &nbsp; | &nbsp; Global FX Broker - <b>0.0 Pips Spread</b> & Instant Execution. <u>Open Account</u>
-</div>
-
-<div class="chart-tool-bar">
-    <div class="tf-pill-box">
-        <button class="tf-pill">1m</button>
-        <button class="tf-pill">5m</button>
-        <button class="tf-pill">15m</button>
-        <button class="tf-pill active">1h</button>
-        <button class="tf-pill">4h</button>
-        <button class="tf-pill">D</button>
-    </div>
-    <div class="indicator-label">
-        <i class="fas fa-chart-line"></i> Indicators
-    </div>
-    <div style="margin-left: auto; display: flex; gap: 18px; color: var(--text-gray); font-size: 16px;">
-        <i class="fas fa-sliders-h" style="cursor:pointer"></i>
-        <i class="fas fa-expand" style="cursor:pointer"></i>
-    </div>
-</div>
 </body>
 </html>
