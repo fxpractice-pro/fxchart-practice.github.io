@@ -2,128 +2,143 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Forex Master Pro - Dynamic Menu</title>
+    <title>Forex Master - Floating Menu Edition</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #060d0a; --panel: #0b120f; --border: #1e2a24; --green: #00ff88; --text: #d1d4dc; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: var(--text); overflow: hidden; font-family: sans-serif; }
-        
-        /* 1단: 대분류 카테고리 (박스형) */
-        .category-header { 
-            background: var(--panel); border-bottom: 1px solid var(--border); 
-            padding: 15px 20px; display: flex; gap: 12px; align-items: center;
-        }
-        .cat-box { 
-            background: #111b16; border: 2px solid #1e2a24; color: #fff; 
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; 
-            transition: all 0.2s; text-align: center; min-width: 60px;
-        }
-        .cat-box:hover { border-color: var(--green); transform: translateY(-2px); }
-        .cat-box.active { background: var(--green); color: #000; border-color: var(--green); box-shadow: 0 0 15px rgba(0,255,136,0.3); }
+        :root { --bg: #060d0a; --panel: rgba(11, 18, 15, 0.9); --border: #1e2a24; --green: #00ff88; --text: #d1d4dc; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; background: #000; color: var(--text); overflow: hidden; font-family: sans-serif; }
 
-        /* 2단: 서브메뉴 플로팅 바 (카테고리 클릭 시 노출) */
-        #sub-menu-panel { 
-            background: #0d1612; border-bottom: 1px solid var(--border); 
-            padding: 8px 25px; display: flex; gap: 20px; height: 35px; align-items: center;
-            overflow-x: auto; scrollbar-width: none;
-        }
-        .pair-link { 
-            color: #666; cursor: pointer; font-size: 13px; font-weight: 500; 
-            white-space: nowrap; transition: 0.2s; padding: 5px 0;
-        }
-        .pair-link:hover { color: #fff; }
-        .pair-link.active { color: var(--green); border-bottom: 2px solid var(--green); }
+        /* 메인 컨테이너 */
+        #viewport { display: flex; width: 100%; height: 100vh; position: relative; }
 
-        /* 레이아웃 */
-        #main-content { display: flex; height: calc(100vh - 130px); }
-        .side-toolbar { width: 55px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 25px; gap: 25px; }
-        .tool-icon { color: #444; font-size: 20px; cursor: pointer; transition: 0.2s; }
-        .tool-icon:hover, .tool-icon.active { color: var(--green); }
+        /* 왼쪽 툴바 */
+        .toolbar { width: 50px; background: #0b120f; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 20px; z-index: 10; }
+        .tool-btn { color: #444; font-size: 20px; cursor: pointer; transition: 0.2s; }
+        .tool-btn:hover, .tool-btn.active { color: var(--green); }
 
-        #chart-area { flex: 1; position: relative; background: #000; }
+        /* 차트 영역 */
+        #chart-container { flex: 1; position: relative; }
+        #chart-inner { width: 100%; height: 100%; }
+
+        /* [핵심] Floating 메뉴바 - 대분류 */
+        #floating-symbol-box {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+            display: flex; gap: 8px; background: var(--panel); 
+            padding: 6px; border-radius: 8px; border: 1px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .cat-item { 
+            padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; color: #888; transition: 0.2s;
+        }
+        .cat-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .cat-item.active { color: #000; background: var(--green); }
+
+        /* [핵심] Floating 서브메뉴 - 하위 종목 */
+        #sub-floating-menu {
+            position: absolute; top: 65px; left: 20px; z-index: 99;
+            background: rgba(10, 20, 15, 0.95); border: 1px solid var(--green);
+            border-radius: 8px; padding: 10px; display: none; flex-direction: column; gap: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 120px;
+        }
+        .sub-item { 
+            padding: 8px 12px; font-size: 13px; color: #aaa; cursor: pointer; border-radius: 4px;
+        }
+        .sub-item:hover { background: var(--green); color: #000; }
+        .sub-item.active { color: var(--green); font-weight: bold; }
+
+        /* 시간대 선택기 (상단 우측 플로팅) */
+        #floating-tf {
+            position: absolute; top: 20px; right: 80px; z-index: 100;
+            display: flex; gap: 5px; background: var(--panel); padding: 5px; border-radius: 20px; border: 1px solid var(--border);
+        }
+        .tf-dot { padding: 4px 10px; font-size: 11px; cursor: pointer; color: #555; border-radius: 15px; }
+        .tf-dot.active { color: var(--green); font-weight: bold; background: rgba(0,255,136,0.1); }
     </style>
 </head>
 <body>
 
-<div class="category-header">
-    <div class="cat-box active" onclick="clickCategory('EUR', this)">EUR</div>
-    <div class="cat-box" onclick="clickCategory('USD', this)">USD</div>
-    <div class="cat-box" onclick="clickCategory('JPY', this)">JPY</div>
-    <div class="cat-box" onclick="clickCategory('GBP', this)">GBP</div>
-    <div class="cat-box" onclick="clickCategory('BTC', this)">CRYPTO</div>
-</div>
-
-<div id="sub-menu-panel">
+<div id="viewport">
+    <div class="toolbar">
+        <i class="fas fa-mouse-pointer tool-btn active"></i>
+        <i class="fas fa-slash tool-btn"></i>
+        <i class="fas fa-square tool-btn"></i>
+        <i class="fas fa-eraser tool-btn" onclick="toggleEraser(this)" title="지우개"></i>
     </div>
 
-<div id="main-content">
-    <div class="side-toolbar">
-        <i class="fas fa-mouse-pointer tool-icon active"></i>
-        <i class="fas fa-slash tool-icon"></i>
-        <i class="fas fa-square tool-icon"></i>
-        <i class="fas fa-eraser tool-icon" onclick="toggleEraser(this)" title="지우개 툴"></i>
-    </div>
-    <div id="chart-area">
-        <div id="chart-div" style="width:100%; height:100%;"></div>
+    <div id="chart-container">
+        <div id="floating-symbol-box">
+            <div class="cat-item active" onclick="toggleSubMenu('EUR', this)">EUR</div>
+            <div class="cat-item" onclick="toggleSubMenu('USD', this)">USD</div>
+            <div class="cat-item" onclick="toggleSubMenu('JPY', this)">JPY</div>
+            <div class="cat-item" onclick="toggleSubMenu('BTC', this)">CRYPTO</div>
+        </div>
+
+        <div id="sub-floating-menu"></div>
+
+        <div id="floating-tf">
+            <div class="tf-dot active" onclick="changeInterval('1m', this)">1m</div>
+            <div class="tf-dot" onclick="changeInterval('5m', this)">5m</div>
+            <div class="tf-dot" onclick="changeInterval('1h', this)">1h</div>
+            <div class="tf-dot" onclick="changeInterval('1d', this)">1d</div>
+        </div>
+
+        <div id="chart-inner"></div>
     </div>
 </div>
 
 <script>
-    let chart, candleSeries, currentPair = 'EURUSDT';
+    let chart, candleSeries, currentPair = 'EURUSDT', currentTf = '1m';
     const groups = {
         'EUR': ['EURUSDT', 'EURJPY', 'EURAUD', 'EURNZD', 'EURCAD'],
         'USD': ['GBPUSDT', 'AUDUSDT', 'NZDUSDT', 'USDCAD', 'USDCHF'],
         'JPY': ['GBPJPY', 'AUDJPY', 'CHFJPY', 'CADJPY'],
-        'GBP': ['GBPUSDT', 'GBPJPY', 'GBPAUD', 'GBPCAD'],
         'BTC': ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT']
     };
 
     function init() {
-        chart = LightweightCharts.createChart(document.getElementById('chart-div'), {
-            layout: { background: { color: '#000' }, textColor: '#d1d4dc' },
-            grid: { vertLines: { color: '#111' }, horzLines: { color: '#111' } },
+        chart = LightweightCharts.createChart(document.getElementById('chart-inner'), {
+            layout: { background: { color: '#060d0a' }, textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#111b16' }, horzLines: { color: '#111b16' } },
+            rightPriceScale: { borderColor: '#1e2a24', autoScale: true },
             timeScale: { borderColor: '#1e2a24', timeVisible: true }
         });
         candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
             upColor: '#26a69a', downColor: '#ef5350', borderVisible: false
         });
-        
-        // 초기 실행: EUR 카테고리 활성화
-        clickCategory('EUR', document.querySelector('.cat-box'));
+        window.addEventListener('resize', () => chart.applyOptions({ width: document.getElementById('chart-inner').clientWidth, height: document.getElementById('chart-inner').clientHeight }));
+        loadData();
     }
 
-    // 카테고리 클릭 시 서브메뉴를 "동적으로" 생성
-    function clickCategory(cat, el) {
-        // 1. 박스 활성화 상태 변경
-        document.querySelectorAll('.cat-box').forEach(b => b.classList.remove('active'));
+    // Floating 서브메뉴 토글 로직
+    function toggleSubMenu(cat, el) {
+        const menu = document.getElementById('sub-floating-menu');
+        
+        // 클릭한 카테고리 활성화
+        document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
 
-        // 2. 서브메뉴 패널 비우고 새로 채우기
-        const panel = document.getElementById('sub-menu-panel');
-        panel.innerHTML = ''; 
-
+        // 서브메뉴 구성
+        menu.innerHTML = '';
         groups[cat].forEach(pair => {
-            const link = document.createElement('div');
-            link.className = 'pair-link' + (pair === currentPair ? ' active' : '');
-            link.innerText = pair.replace('USDT', '/USD').replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
-            
-            link.onclick = () => {
+            const item = document.createElement('div');
+            item.className = 'sub-item' + (pair === currentPair ? ' active' : '');
+            item.innerText = pair.replace('USDT', '/USD').replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2');
+            item.onclick = () => {
                 currentPair = pair;
-                document.querySelectorAll('.pair-link').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                loadChartData(pair);
+                menu.style.display = 'none'; // 선택 시 닫기
+                loadData();
             };
-            panel.appendChild(link);
+            menu.appendChild(item);
         });
 
-        // 카테고리 변경 시 첫 번째 종목으로 차트 업데이트
-        currentPair = groups[cat][0];
-        loadChartData(currentPair);
+        // 메뉴 위치를 클릭한 버튼 아래로 이동 후 표시
+        menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        menu.style.left = el.offsetLeft + "px";
     }
 
-    async function loadChartData(symbol) {
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=500`);
+    async function loadData() {
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentPair}&interval=${currentTf}&limit=500`);
         const data = await res.json();
         const formatted = data.map(d => ({
             time: d[0] / 1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4])
@@ -132,11 +147,16 @@
         chart.timeScale().fitContent();
     }
 
+    function changeInterval(tf, el) {
+        currentTf = tf;
+        document.querySelectorAll('.tf-dot').forEach(d => d.classList.remove('active'));
+        el.classList.add('active');
+        loadData();
+    }
+
     function toggleEraser(el) {
         el.classList.toggle('active');
-        if(el.classList.contains('active')) {
-            alert("지우개 모드가 활성화되었습니다. (드로잉 기능 구현 시 연동됩니다)");
-        }
+        // 지우개 로직은 드로잉 기능 추가 시 연동
     }
 
     init();
