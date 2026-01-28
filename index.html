@@ -2,56 +2,61 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Forex Master Pro - Multi Timeframe</title>
+    <title>Forex Master Pro - Timeframe Switcher</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #060d0a; --panel: #0b120f; --border: #1e2a24; --green: #00ff88; --red: #ef5350; --text: #d1d4dc; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: var(--text); overflow: hidden; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; background: var(--bg); color: var(--text); overflow: hidden; font-family: 'Inter', sans-serif; }
         
-        header { height: 60px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; padding: 0 15px; }
-        .menu-row { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
-        .nav-btn { background: #16261f; color: #fff; border: 1px solid #1e2a24; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .nav-btn.active { border-color: var(--green); color: var(--green); }
-        .timeframe-btn { background: none; border: 1px solid transparent; color: #888; cursor: pointer; font-size: 12px; padding: 2px 6px; }
-        .timeframe-btn.active { color: #fff; border-bottom: 2px solid var(--green); }
+        /* 상단 메뉴바 고도화 */
+        header { 
+            height: 70px; background: var(--panel); border-bottom: 1px solid var(--border); 
+            display: flex; flex-direction: column; justify-content: center; padding: 0 20px; 
+        }
+        .row { display: flex; align-items: center; gap: 15px; height: 30px; }
+        .label { font-size: 10px; color: #555; font-weight: bold; width: 50px; }
+        
+        .btn { background: #16261f; color: #888; border: 1px solid #1e2a24; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: 0.2s; }
+        .btn:hover { color: #fff; border-color: #333; }
+        .btn.active { background: var(--green); color: #000; border-color: var(--green); font-weight: bold; }
 
-        #main-layout { display: flex; height: calc(100vh - 60px); }
+        #main { display: flex; height: calc(100vh - 70px); }
         .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 20px; }
-        #chart-container { flex: 1; position: relative; background: #000; }
+        #chart-container { flex: 1; position: relative; }
         
+        /* 재생 컨트롤러 */
         #floating-ctrl {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 25, 20, 0.95); border: 2px solid var(--green);
-            padding: 10px 20px; border-radius: 40px; z-index: 9999; display: flex; align-items: center; gap: 15px; cursor: move;
+            padding: 10px 25px; border-radius: 40px; z-index: 9999; display: flex; align-items: center; gap: 15px; cursor: move;
         }
         .play-btn { background: var(--green); border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; color: #000; }
         .speed-sel { background: #1a2e25; border: 1px solid var(--border); color: #fff; padding: 4px 10px; border-radius: 15px; font-size: 11px; outline: none; }
-        .side-panel { width: 260px; background: var(--panel); border-left: 1px solid var(--border); padding: 15px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="menu-row">
-        <div style="font-weight:bold; color:var(--green); margin-right:10px;">MARKET</div>
-        <button class="nav-btn active" onclick="changePair('EURUSDT', this)">EUR/USD</button>
-        <button class="nav-btn" onclick="changePair('GBPUSDT', this)">GBP/USD</button>
-        <button class="nav-btn" onclick="changePair('USDJPY', this)">USD/JPY</button>
-        <button class="nav-btn" onclick="changePair('BTCUSDT', this)">BTC/USD</button>
+    <div class="row">
+        <span class="label">SYMBOL</span>
+        <button class="btn active" onclick="changePair('EURUSDT', this)">EUR/USD</button>
+        <button class="btn" onclick="changePair('GBPUSDT', this)">GBP/USD</button>
+        <button class="btn" onclick="changePair('USDJPY', this)">USD/JPY</button>
+        <button class="btn" onclick="changePair('BTCUSDT', this)">BTC/USD</button>
     </div>
-    <div class="menu-row" id="timeframe-group">
-        <div style="font-weight:bold; color:#555; margin-right:10px; font-size:12px;">TIME</div>
-        <button class="timeframe-btn active" onclick="changeTimeframe('1m', this)">1m</button>
-        <button class="timeframe-btn" onclick="changeTimeframe('5m', this)">5m</button>
-        <button class="timeframe-btn" onclick="changeTimeframe('15m', this)">15m</button>
-        <button class="timeframe-btn" onclick="changeTimeframe('1h', this)">1h</button>
-        <button class="timeframe-btn" onclick="changeTimeframe('4h', this)">4h</button>
-        <button class="timeframe-btn" onclick="changeTimeframe('1d', this)">1d</button>
+    <div class="row" style="margin-top:5px;">
+        <span class="label">INTERVAL</span>
+        <button class="btn timeframe-btn" onclick="changeInterval('1m', this)">1m</button>
+        <button class="btn timeframe-btn" onclick="changeInterval('5m', this)">5m</button>
+        <button class="btn timeframe-btn" onclick="changeInterval('15m', this)">15m</button>
+        <button class="btn timeframe-btn active" onclick="changeInterval('1h', this)">1h</button>
+        <button class="btn timeframe-btn" onclick="changeInterval('4h', this)">4h</button>
+        <button class="btn timeframe-btn" onclick="changeInterval('1d', this)">1d</button>
     </div>
 </header>
 
-<div id="main-layout">
+<div id="main">
     <div class="toolbar">
         <i class="fas fa-mouse-pointer" style="color:var(--green)"></i>
         <i class="fas fa-slash"></i>
@@ -70,16 +75,16 @@
                 <option value="5">5x</option>
                 <option value="10">10x</option>
             </select>
-            <div id="sim-time" style="font-size:11px; color:#666; font-family:monospace;">READY</div>
+            <div id="sim-time" style="font-size:11px; color:#888; font-family:monospace;">READY</div>
         </div>
     </div>
 </div>
 
 <script>
     window.simSpeed = 1;
-    let chart, candleSeries, allData = [], idx = 250, isPlaying = false;
-    let currentPair = 'EURUSDT', currentTimeframe = '1m';
-    let prog = 0, lastT = 0, cH = 0, cL = 0;
+    let chart, candleSeries, allData = [], idx = 300, isPlaying = false;
+    let currentSymbol = 'EURUSDT', currentInterval = '1h';
+    let progress = 0, lastTime = 0, cH = 0, cL = 0;
 
     function initChart() {
         const dom = document.getElementById('chart-inner');
@@ -94,48 +99,51 @@
             priceFormat: { type: 'price', precision: 5, minMove: 0.00001 }
         });
         window.addEventListener('resize', () => chart.applyOptions({ width: dom.clientWidth, height: dom.clientHeight }));
-        fetchData();
+        updateData();
     }
 
-    async function fetchData() {
+    // 종목 또는 시간대 변경 시 호출되는 함수
+    async function updateData() {
         isPlaying = false;
         document.getElementById('play-icon').className = 'fas fa-play';
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentPair}&interval=${currentTimeframe}&limit=1000`);
-        const data = await res.json();
-        allData = data.map(d => ({
-            time: d[0] / 1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4])
-        }));
-        idx = 250;
-        candleSeries.setData(allData.slice(0, idx));
-        chart.timeScale().fitContent();
+        try {
+            const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=1000`);
+            const data = await res.json();
+            allData = data.map(d => ({
+                time: d[0] / 1000, open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4])
+            }));
+            idx = 300;
+            candleSeries.setData(allData.slice(0, idx));
+            chart.timeScale().fitContent();
+        } catch(e) { console.error("API Error"); }
     }
 
-    function changePair(pair, btn) {
-        currentPair = pair;
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    function changePair(symbol, btn) {
+        currentSymbol = symbol;
+        document.querySelectorAll('header .btn').forEach(b => { if(!b.classList.contains('timeframe-btn')) b.classList.remove('active') });
         btn.classList.add('active');
-        fetchData();
+        updateData();
     }
 
-    function changeTimeframe(tf, btn) {
-        currentTimeframe = tf;
+    function changeInterval(interval, btn) {
+        currentInterval = interval;
         document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        fetchData();
+        updateData();
     }
 
     function loop(t) {
         if (!isPlaying) return;
-        if (!lastT) lastT = t;
-        const dt = (t - lastT) / 1000;
-        lastT = t;
-        prog += dt * (window.simSpeed * 0.8);
-        if (prog >= 1) {
-            while(prog >= 1) { prog -= 1; idx++; if (idx >= allData.length) { isPlaying=false; return; } }
+        if (!lastTime) lastTime = t;
+        const dt = (t - lastTime) / 1000;
+        lastTime = t;
+        progress += dt * (window.simSpeed * 0.7);
+        if (progress >= 1) {
+            while(progress >= 1) { progress -= 1; idx++; if (idx >= allData.length) { isPlaying=false; return; } }
             cH = allData[idx].open; cL = allData[idx].open;
         }
         const d = allData[idx];
-        let p = (prog < 0.5) ? d.open + (d.high - d.open) * (prog * 2) : d.high - (d.high - d.close) * ((prog - 0.5) * 2);
+        let p = (progress < 0.5) ? d.open + (d.high - d.open) * (progress * 2) : d.high - (d.high - d.close) * ((progress - 0.5) * 2);
         cH = Math.max(cH, p); cL = Math.min(cL, p);
         candleSeries.update({ time: d.time, open: d.open, high: cH, low: cL, close: p });
         document.getElementById('sim-time').innerText = new Date(allData[idx].time * 1000).toLocaleString();
@@ -145,7 +153,7 @@
     function togglePlay() {
         isPlaying = !isPlaying;
         document.getElementById('play-icon').className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
-        if (isPlaying) { lastT = 0; requestAnimationFrame(loop); }
+        if (isPlaying) { lastTime = 0; requestAnimationFrame(loop); }
     }
 
     initChart();
