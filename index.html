@@ -2,41 +2,41 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>ForexPractice Final Solution</title>
+    <title>ForexPractice Fixed</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #0b120f; --green: #00ff88; --red: #ef5350; --border: #1f2328; }
         body, html { margin: 0; padding: 0; background: #000; color: #fff; height: 100vh; font-family: sans-serif; overflow: hidden; }
-
-        /* Stitch Top & Header */
-        .top-nav { height: 40px; background: #000; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--border); justify-content: space-between; }
-        .header { height: 60px; background: var(--bg); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); }
-
-        .main-view { display: flex; height: calc(100vh - 100px); }
-        .toolbar { width: 50px; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 25px; color: #8b949e; }
         
-        .chart-container { flex: 1; position: relative; background: #000; }
-        #chart-div { width: 100%; height: 100%; }
+        /* 레이아웃 설정 */
+        .top-bar { height: 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; font-size: 12px; }
+        .header { height: 60px; background: var(--bg); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); }
+        .main { display: flex; height: calc(100vh - 100px); }
+        
+        /* 도구창 및 차트 영역 */
+        .tools { width: 50px; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 20px; color: #8b949e; }
+        .chart-area { flex: 1; position: relative; }
+        #chart-canvas { width: 100%; height: 100%; }
 
-        /* [중앙 컨트롤 바] image_db0ff4 스타일 구현 */
-        .playback-ctrl {
+        /* [중앙 재생 컨트롤러] image_db0ff4 스타일 */
+        .ctrl-panel {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(22, 27, 24, 0.95); border: 1px solid #2d3531;
-            padding: 10px 25px; border-radius: 14px; display: flex; align-items: center; gap: 20px; z-index: 100;
+            padding: 10px 25px; border-radius: 12px; display: flex; align-items: center; gap: 15px; z-index: 1000;
         }
-        .play-main-icon { font-size: 36px; color: var(--green); cursor: pointer; }
-
-        /* [우측 패널] image_da9437 스타일 */
-        .sim-panel { width: 320px; border-left: 1px solid var(--border); background: var(--bg); padding: 20px; }
-        .trade-btn { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: 900; cursor: pointer; margin-top: 10px; color: #fff; }
+        .play-btn { font-size: 32px; color: var(--green); cursor: pointer; }
+        
+        /* 우측 시뮬레이터 패널 */
+        .sidebar { width: 300px; border-left: 1px solid var(--border); background: var(--bg); padding: 20px; }
+        .btn-buy { width: 100%; padding: 15px; background: var(--green); color: #000; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="top-nav">
-    <div style="font-weight:900;">Stitch <small style="opacity:0.5">BETA</small></div>
-    <button style="background:#f8daff; border:none; padding:4px 12px; border-radius:6px; font-weight:700;">공유</button>
+<div class="top-bar">
+    <b>Stitch <small style="opacity:0.5">BETA</small></b>
+    <button style="background:#f8daff; border:none; border-radius:4px; padding:3px 10px; font-weight:bold;">공유</button>
 </div>
 
 <header class="header">
@@ -44,56 +44,54 @@
     <div style="margin-left:auto; font-weight:bold;">$10,000.00</div>
 </header>
 
-<div class="main-view">
-    <div class="toolbar">
+<div class="main">
+    <div class="tools">
         <i class="fas fa-mouse-pointer" style="color:var(--green)"></i>
         <i class="fas fa-pencil-alt"></i>
-        <i class="fas fa-eraser"></i>
-    </div>
+        <i class="fas fa-eraser"></i> </div>
 
-    <div class="chart-container">
-        <div id="chart-div"></div>
-        <div class="playback-ctrl">
-            <i class="fas fa-backward"></i>
-            <i id="play-trigger" class="fas fa-play-circle play-main-icon"></i>
-            <i class="fas fa-forward"></i>
-            <div style="width:1px; height:20px; background:#444;"></div>
-            <span style="font-size:11px; font-weight:900; background:#fff; color:#000; padding:2px 6px; border-radius:4px;">1x</span>
+    <div class="chart-area">
+        <div id="chart-canvas"></div>
+        <div class="ctrl-panel">
+            <i class="fas fa-step-backward"></i>
+            <i id="btn-play" class="fas fa-play-circle play-btn"></i>
+            <i class="fas fa-step-forward"></i>
+            <span style="font-size:11px; font-weight:900; background:#fff; color:#000; padding:2px 5px; border-radius:3px;">1x</span>
         </div>
     </div>
 
-    <aside class="sim-panel">
-        <h3 style="font-size:14px;">Market Simulator <span style="float:right; color:var(--green); font-size:10px; border:1px solid var(--green); padding:2px 4px; border-radius:4px;">LIVE</span></h3>
-        <div style="background:#161b18; padding:15px; border-radius:10px; border:1px solid var(--border); margin:20px 0;">
-            <div style="color:#8b949e; font-size:11px;">Equity</div>
-            <div style="font-size:20px; font-weight:700;">$10,000.00</div>
+    <aside class="sidebar">
+        <div style="display:flex; justify-content:space-between;"><b>Simulator</b><span style="color:var(--green); font-size:10px;">LIVE</span></div>
+        <div style="background:#161b18; padding:15px; border-radius:8px; margin:15px 0;">
+            <small style="color:#8b949e">Balance</small>
+            <div style="font-size:20px; font-weight:bold;">$10,000.00</div>
         </div>
-        <button class="trade-btn" style="background:var(--red);">SELL</button>
-        <button class="trade-btn" style="background:var(--green); color:#000;">BUY</button>
+        <button class="btn-buy">BUY</button>
     </aside>
 </div>
 
 <script>
-    // [중요] 라이브러리 로딩 확인 후 실행
-    window.onload = function() {
+    // [핵심] 라이브러리가 로드되었는지 확인하는 안전장치
+    function initChart() {
         if (typeof LightweightCharts === 'undefined') {
-            alert("차트 라이브러리를 불러오지 못했습니다. 새로고침 해주세요.");
+            console.error("차트 라이브러리 로딩 중...");
+            setTimeout(initChart, 100); // 0.1초 뒤에 다시 시도
             return;
         }
 
-        const chartElement = document.getElementById('chart-div');
-        const chartObj = LightweightCharts.createChart(chartElement, {
-            layout: { background: { color: '#000000' }, textColor: '#8b949e' },
+        const chartElement = document.getElementById('chart-canvas');
+        const chart = LightweightCharts.createChart(chartElement, {
+            layout: { background: { color: '#000000' }, textColor: '#d1d4dc' },
             grid: { vertLines: { color: '#161b18' }, horzLines: { color: '#161b18' } },
-            timeScale: { timeVisible: true, borderColor: '#1f2328' }
+            timeScale: { timeVisible: true }
         });
 
-        const candleSeries = chartObj.addCandlestickSeries({
+        const series = chart.addCandlestickSeries({
             upColor: '#00ff88', downColor: '#ef5350', borderVisible: false,
             wickUpColor: '#00ff88', wickDownColor: '#ef5350'
         });
 
-        // 초기 데이터 로드 (캔들이 즉시 나타나게 함)
+        // 초기 가상 캔들 100개 생성 (즉시 보여주기 위함)
         let data = [];
         let t = Math.floor(Date.now() / 1000) - 100 * 60;
         let p = 1.0845;
@@ -102,29 +100,31 @@
             data.push({ time: t + i*60, open: o, high: Math.max(o,c)+0.0002, low: Math.min(o,c)-0.0002, close: c });
             p = c;
         }
-        candleSeries.setData(data);
+        series.setData(data);
 
-        // 재생/일시정지 로직 (image_db0ff4 기능 반영)
-        let isRunning = false;
-        const playBtn = document.getElementById('play-trigger');
-        let lastCandle = data[data.length - 1];
+        // 재생 기능 연동 [cite: 2026-01-07]
+        let running = false;
+        const playBtn = document.getElementById('btn-play');
+        let last = data[data.length - 1];
 
         playBtn.onclick = () => {
-            isRunning = !isRunning;
-            playBtn.className = isRunning ? "fas fa-pause-circle play-main-icon" : "fas fa-play-circle play-main-icon";
+            running = !running;
+            playBtn.className = running ? "fas fa-pause-circle play-btn" : "fas fa-play-circle play-btn";
         };
 
-        // 실시간 틱 업데이트 시뮬레이션
         setInterval(() => {
-            if(!isRunning) return;
-            lastCandle.close += (Math.random() - 0.5) * 0.0001;
-            lastCandle.high = Math.max(lastCandle.high, lastCandle.close);
-            lastCandle.low = Math.min(lastCandle.low, lastCandle.close);
-            candleSeries.update(lastCandle);
+            if(!running) return;
+            last.close += (Math.random() - 0.5) * 0.0001;
+            last.high = Math.max(last.high, last.close);
+            last.low = Math.min(last.low, last.close);
+            series.update(last);
         }, 300);
 
-        window.onresize = () => chartObj.resize(chartElement.clientWidth, chartElement.clientHeight);
-    };
+        window.onresize = () => chart.resize(chartElement.clientWidth, chartElement.clientHeight);
+    }
+
+    // 페이지 로드 시 차트 시작
+    window.onload = initChart;
 </script>
 </body>
 </html>
