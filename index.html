@@ -1,142 +1,113 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <style>
-        /* 기존 root 변수에 우측 영역 색상 추가 */
-        :root {
-            --stitch-black: #000000;
-            --header-dark: #0b120f;
-            --card-bg: #161b18; /* 시뮬레이터 내부 박스 배경 */
-            --active-green: #00ff88;
-            --sell-red: #ff4d4d;
-            --text-gray: #8b949e;
-            --border-color: #1f2328;
-        }
+<style>
+    /* 우측 사이드바 전용 스타일 리터칭 */
+    .sidebar-right {
+        width: 340px; background: #0b120f; border-left: 1px solid #1f2328;
+        padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+    }
 
-        /* 전체 레이아웃 구성을 위한 flex 설정 */
-        .main-container { display: flex; height: calc(100vh - 194px); background: #000; }
-        
-        /* 왼쪽 차트 영역 (가상) */
-        .chart-area { flex: 1; border-right: 1px solid var(--border-color); position: relative; }
+    /* 타이틀 및 LIVE 표시 */
+    .sim-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .sim-top-row h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+    .live-tag { background: rgba(0, 255, 136, 0.1); color: #00ff88; font-size: 10px; padding: 2px 6px; border: 1px solid #00ff88; border-radius: 4px; font-weight: 900; }
 
-        /* [핵심] 우측 사이드바 영역 */
-        .sidebar-right { width: 320px; background: var(--header-dark); padding: 20px; display: flex; flex-direction: column; gap: 20px; border-left: 1px solid var(--border-color); }
+    /* 스테츠 박스 (Balance/Equity) */
+    .stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { background: #1a211e; border: 1px solid #2d3531; border-radius: 6px; padding: 12px; }
+    .stat-card label { font-size: 11px; color: #8b949e; display: block; margin-bottom: 6px; }
+    .stat-card b { font-size: 14px; color: #fff; font-family: 'JetBrains Mono', monospace; }
 
-        /* Market Simulator 타이틀 */
-        .sidebar-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .sidebar-title h2 { font-size: 16px; font-weight: 700; margin: 0; color: #fff; }
-        .live-badge { background: rgba(0, 255, 136, 0.1); color: var(--active-green); font-size: 10px; font-weight: 800; padding: 2px 6px; border: 1px solid var(--active-green); border-radius: 4px; }
+    /* 입력 폼 */
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .input-field label { font-size: 11px; color: #8b949e; display: block; margin-bottom: 6px; }
+    .input-field input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; color: #fff; font-weight: 600; box-sizing: border-box; }
 
-        /* 시뮬레이터 카드 스테츠 */
-        .simulator-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-item label { display: block; color: var(--text-gray); font-size: 11px; margin-bottom: 5px; }
-        .stat-item span { font-size: 14px; font-weight: 700; color: #fff; }
+    /* SELL / BUY 버튼 (이미지 채도 일치) */
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    .btn-action { border: none; border-radius: 4px; padding: 14px; cursor: pointer; text-align: center; }
+    .btn-sell-pro { background: #ef5350; color: #fff; }
+    .btn-buy-pro { background: #00ff88; color: #000; }
+    .btn-action div:first-child { font-size: 10px; font-weight: 900; margin-bottom: 2px; }
+    .btn-action div:last-child { font-size: 15px; font-weight: 900; }
 
-        /* 입력창 영역 */
-        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .input-box label { display: block; color: var(--text-gray); font-size: 11px; margin-bottom: 5px; }
-        .input-box input { width: 100%; background: #000; border: 1px solid #333; border-radius: 6px; padding: 10px; color: #fff; font-weight: 600; box-sizing: border-box; }
+    /* P&L 요약 */
+    .pnl-row { border-top: 1px dashed #30363d; margin-top: 12px; padding-top: 12px; display: flex; justify-content: space-between; font-size: 12px; color: #8b949e; }
 
-        /* SELL / BUY 버튼 */
-        .trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .btn-trade { border: none; border-radius: 6px; padding: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .btn-sell { background: var(--sell-red); color: #fff; }
-        .btn-buy { background: var(--active-green); color: #000; }
-        .btn-trade .side { font-size: 10px; font-weight: 800; }
-        .btn-trade .price { font-size: 14px; font-weight: 800; }
+    /* [광고 영역] SPONSORED 디자인 복제 */
+    .sponsored-header { font-size: 10px; color: #8b949e; font-weight: 800; margin: 20px 0 10px 0; letter-spacing: 0.5px; }
+    .ad-pro-card { 
+        background: #161b18; border: 1px solid #2d3531; border-radius: 10px; padding: 20px; 
+        text-align: center; position: relative; margin-bottom: 12px;
+    }
+    .ad-pro-tag { position: absolute; top: 10px; right: 10px; font-size: 9px; color: #555; background: #000; padding: 1px 4px; border-radius: 2px; }
+    .ad-pro-icon { font-size: 32px; color: #00ff88; margin-bottom: 15px; display: inline-block; }
+    .ad-pro-card h4 { font-size: 16px; margin: 0 0 10px 0; color: #fff; }
+    .ad-pro-card p { font-size: 12px; color: #8b949e; line-height: 1.5; margin-bottom: 18px; }
+    .btn-apply { background: #00ff88; color: #000; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 13px; }
+    
+    /* 두 번째 광고 스타일 (Darker) */
+    .ad-pro-card.dark { background: #0d1117; border-color: #1f2328; }
+    .btn-learn { background: #2d3531; color: #00ff88; border: none; padding: 10px; width: 100%; border-radius: 6px; font-weight: 800; cursor: pointer; }
+</style>
 
-        .open-pnl { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-gray); }
+<aside class="sidebar-right">
+    <div class="sim-top-row">
+        <h3>Market Simulator</h3>
+        <span class="live-tag">LIVE</span>
+    </div>
 
-        /* [핵심] SPONSORED CPC 광고 영역 */
-        .sponsored-section { margin-top: 10px; }
-        .sponsored-label { font-size: 10px; color: var(--text-gray); font-weight: 800; letter-spacing: 1px; margin-bottom: 15px; display: block; }
-        
-        .ad-card { 
-            background: linear-gradient(145deg, #111, #080d0b);
-            border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-            position: relative;
-        }
-        .ad-icon-box { 
-            width: 48px; height: 48px; background: rgba(0, 255, 136, 0.1); 
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            margin-bottom: 15px; border: 1px solid rgba(0, 255, 136, 0.2);
-        }
-        .ad-icon-box i { color: var(--active-green); font-size: 24px; }
-        .ad-card h3 { font-size: 15px; margin: 0 0 8px 0; color: #fff; }
-        .ad-card p { font-size: 12px; color: var(--text-gray); margin: 0 0 15px 0; line-height: 1.4; }
-        .btn-ad-action { background: #3366ff; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; width: 100%; }
-        .ad-badge { position: absolute; top: 10px; right: 10px; font-size: 9px; color: #444; }
-    </style>
-</head>
-<body>
-
-<div class="main-container">
-    <div class="chart-area">
+    <div class="stat-container">
+        <div class="stat-card">
+            <label>Balance</label>
+            <b>$10,000.00</b>
         </div>
-
-    <div class="sidebar-right">
-        <div class="sidebar-title">
-            <h2>Market Simulator</h2>
-            <span class="live-badge">LIVE</span>
-        </div>
-
-        <div class="simulator-card">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <label>Balance</label>
-                    <span>$10,000.00</span>
-                </div>
-                <div class="stat-item">
-                    <label>Equity</label>
-                    <span>$10,000.00</span>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <div class="input-box">
-                    <label>Lots</label>
-                    <input type="text" value="1.00">
-                </div>
-                <div class="input-box">
-                    <label>Risk %</label>
-                    <input type="text" value="1.0">
-                </div>
-            </div>
-
-            <div class="trade-btns">
-                <button class="btn-trade btn-sell">
-                    <span class="side">SELL</span>
-                    <span class="price">1.08450</span>
-                </button>
-                <button class="btn-trade btn-buy">
-                    <span class="side">BUY</span>
-                    <span class="price">1.08454</span>
-                </button>
-            </div>
-
-            <div class="open-pnl">
-                <span>Open P&L</span>
-                <span style="color:#fff; font-weight:700;">0.00</span>
-            </div>
-        </div>
-
-        <div class="sponsored-section">
-            <span class="sponsored-label">SPONSORED</span>
-            <div class="ad-card">
-                <span class="ad-badge">Ad</span>
-                <div class="ad-icon-box">
-                    <i class="fas fa-piggy-bank"></i>
-                </div>
-                <h3>High Yield Savings</h3>
-                <p>Earn up to 5.5% APY with our premium partner banks. FDIC Insured.</p>
-                <button class="btn-ad-action">Start Free Trial</button>
-            </div>
+        <div class="stat-card">
+            <label>Equity</label>
+            <b>$10,000.00</b>
         </div>
     </div>
-</div>
 
-</body>
-</html>
+    <div class="input-row">
+        <div class="input-field">
+            <label>Lots</label>
+            <input type="text" value="1.00">
+        </div>
+        <div class="input-field">
+            <label>Risk %</label>
+            <input type="text" value="1.0">
+        </div>
+    </div>
+
+    <div class="action-row">
+        <button class="btn-action btn-sell-pro">
+            <div>SELL</div>
+            <div>1.08450</div>
+        </button>
+        <button class="btn-action btn-buy-pro">
+            <div>BUY</div>
+            <div>1.08454</div>
+        </button>
+    </div>
+
+    <div class="pnl-row">
+        <span>Open P&L</span>
+        <span style="color:#fff; font-weight:700;">0.00</span>
+    </div>
+
+    <div class="sponsored-header">SPONSORED</div>
+
+    <div class="ad-pro-card">
+        <span class="ad-pro-tag">Ad</span>
+        <div class="ad-pro-icon"><i class="fas fa-piggy-bank"></i></div>
+        <h4>High Yield Savings</h4>
+        <p>Earn up to 5.5% APY with our premium partner banks. FDIC Insured.</p>
+        <button class="btn-apply">Apply Now</button>
+    </div>
+
+    <div class="ad-pro-card dark">
+        <span class="ad-pro-tag">Ad</span>
+        <div class="ad-pro-icon" style="color: #448aff;"><i class="fas fa-chart-bar"></i></div>
+        <h4>Pro Analytics Suite</h4>
+        <p>Get deep AI-driven insights on your trading habits and improve performance.</p>
+        <button class="btn-learn">Learn More</button>
+    </div>
+</aside>
