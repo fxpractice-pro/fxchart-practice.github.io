@@ -2,178 +2,158 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <title>ForexPractice Live Pro</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        /* 1. 이미지의 정확한 색상 및 환경 설정 */
         :root {
-            --stitch-bg: #000000;
-            --fp-header-bg: #0b120f;  /* 이미지 특유의 짙은 암록색 */
-            --active-green: #00ff88;  /* 형광 녹색 */
-            --sell-red: #ef5350;      /* SELL 버튼 빨간색 */
-            --text-gray: #8b949e;
-            --border-color: #1f2328;
-            --card-inner: #161b18;    /* 시뮬레이터 내부 박스 */
-            --input-dark: #0d1117;
+            --bg-deep: #0b120f; --stitch-black: #000; --active-green: #00ff88;
+            --sell-red: #ef5350; --text-dim: #8b949e; --border: #1f2328;
+            --card-inner: #161b18; --pink-share: #f8daff;
         }
 
-        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: -apple-system, system-ui, sans-serif; height: 100vh; overflow: hidden; }
+        body, html { margin: 0; padding: 0; background: #000; color: #fff; font-family: sans-serif; height: 100vh; overflow: hidden; }
 
-        /* [윗부분] 2. Stitch 최상단 바 (공유 버튼 포함) */
-        .top-stitch {
-            height: 44px; background: var(--stitch-bg); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; padding: 0 16px; justify-content: space-between;
-        }
-        .st-logo { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
-        .st-logo span { background: #21262d; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; color: var(--text-gray); font-weight: 400; }
-        .st-device-icons { display: flex; gap: 24px; color: var(--text-gray); font-size: 16px; position: absolute; left: 50%; transform: translateX(-50%); }
-        .st-device-icons i:hover { color: #fff; cursor: pointer; }
-        .btn-share { background: #f8daff; color: #000; border: none; padding: 5px 14px; border-radius: 8px; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        /* [윗부분] Stitch & Header */
+        .top-stitch { height: 40px; background: var(--stitch-black); display: flex; align-items: center; padding: 0 16px; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .st-logo { font-weight: 800; font-size: 18px; }
+        .btn-share { background: var(--pink-share); color: #000; border: none; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; }
 
-        /* 3. ForexPractice 메인 헤더 */
-        .fp-header {
-            height: 64px; background: var(--fp-header-bg); border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; padding: 0 20px; gap: 15px;
-        }
-        .fp-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 19px; }
-        .fp-logo i { color: var(--active-green); font-size: 22px; }
-        .fp-search { background: var(--input-dark); border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; width: 220px; border: 1px solid #30363d; }
-        .fp-search input { background: none; border: none; color: #fff; margin-left: 10px; font-size: 14px; outline: none; width: 100%; }
-        .fp-nav { display: flex; gap: 24px; font-weight: 600; font-size: 14px; margin-left: 20px; }
-        .fp-user { margin-left: auto; display: flex; align-items: center; gap: 15px; }
-        .wallet-box { background: rgba(255,255,255,0.05); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border-color); font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .fp-header { height: 60px; background: var(--bg-deep); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); gap: 15px; }
+        .search-bar { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; width: 200px; display: flex; align-items: center; }
+        .search-bar input { background: none; border: none; color: #fff; margin-left: 8px; outline: none; width: 100%; }
 
-        /* 4. 컨트롤 바 (시간대 & 지표) */
-        .sub-tools {
-            height: 48px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 16px; gap: 12px;
-        }
-        .tf-pill { background: #000; border: 1px solid var(--border-color); color: var(--text-gray); padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
-        .tf-pill.active { background: var(--active-green); color: #000; font-weight: bold; border-color: var(--active-green); }
+        /* [중앙] 메인 레이아웃 */
+        .main-container { display: flex; height: calc(100vh - 100px); }
+        
+        .left-tools { width: 48px; border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 20px; color: var(--text-dim); }
+        .left-tools i:hover { color: var(--active-green); cursor: pointer; }
 
-        /* 5. 메인 본문 레이아웃 */
-        .main-content { display: flex; height: calc(100vh - 156px); }
+        .chart-area { flex: 1; position: relative; background: #000; }
+        #chart { width: 100%; height: 100%; }
 
-        /* 왼쪽 사이드 툴바 */
-        .left-toolbar { width: 48px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 25px; color: var(--text-gray); }
+        /* [우측] 시뮬레이터 */
+        .sidebar-right { width: 320px; border-left: 1px solid var(--border); background: var(--bg-deep); padding: 16px; overflow-y: auto; }
+        .sim-card { background: var(--card-inner); border-radius: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box label { font-size: 10px; color: var(--text-dim); display: block; }
+        .stat-box b { font-size: 14px; }
 
-        /* 중앙 차트 영역 */
-        .center-chart { flex: 1; background: #000; position: relative; }
-
-        /* 우측 시뮬레이터 (사용자님의 핵심 요구사항) */
-        .sidebar-right { width: 340px; border-left: 1px solid var(--border-color); background: var(--fp-header-bg); padding: 20px; overflow-y: auto; }
-        .sim-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .sim-head h3 { font-size: 15px; margin: 0; }
-        .tag-live { border: 1px solid var(--active-green); color: var(--active-green); font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: 900; }
-
-        .card-stat { background: var(--card-inner); border: 1px solid var(--border-color); border-radius: 10px; padding: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .card-stat label { font-size: 11px; color: var(--text-gray); display: block; margin-bottom: 6px; }
-        .card-stat b { font-size: 15px; font-family: 'JetBrains Mono', monospace; }
-
-        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .input-group input { width: 100%; background: var(--input-dark); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; color: #fff; font-weight: 600; box-sizing: border-box; }
-
-        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn-trade { border: none; border-radius: 6px; padding: 15px; cursor: pointer; text-align: center; }
+        .trade-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .t-btn { border: none; border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; }
         .sell { background: var(--sell-red); color: #fff; }
         .buy { background: var(--active-green); color: #000; }
-        .btn-trade .side { font-size: 11px; font-weight: 900; display: block; }
-        .btn-trade .price { font-size: 16px; font-weight: 900; }
+        .t-btn span { display: block; font-weight: 900; }
 
-        /* SPONSORED 광고 */
-        .ad-section { margin-top: 30px; }
-        .ad-label { font-size: 10px; color: var(--text-gray); font-weight: 800; margin-bottom: 15px; display: block; }
-        .ad-box { background: #111814; border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; text-align: center; position: relative; }
-        .ad-box i { font-size: 32px; color: var(--active-green); margin-bottom: 15px; }
-        .ad-box h4 { margin: 0 0 10px 0; font-size: 16px; }
-        .ad-box p { font-size: 12px; color: var(--text-gray); line-height: 1.6; margin-bottom: 20px; }
-        .btn-ad { background: var(--active-green); color: #000; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: 800; cursor: pointer; }
+        /* 재생 컨트롤러 (이미지 db0ff4 재현) */
+        .play-ctrl {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(30, 35, 32, 0.9); border: 1px solid var(--border);
+            padding: 10px 20px; border-radius: 12px; display: flex; align-items: center; gap: 15px; z-index: 10;
+        }
     </style>
 </head>
 <body>
 
 <div class="top-stitch">
-    <div class="st-logo">Stitch <span>BETA</span></div>
-    <div class="st-device-icons">
-        <i class="fas fa-mobile-alt"></i>
-        <i class="fas fa-tablet-alt"></i>
-        <i class="fas fa-desktop" style="color: #448aff;"></i>
-        <i class="fas fa-external-link-alt"></i>
-        <i class="fas fa-th-large"></i>
-    </div>
+    <div class="st-logo">Stitch <small style="font-size:10px; opacity:0.5">BETA</small></div>
     <button class="btn-share"><i class="fas fa-lock"></i> 공유</button>
 </div>
 
 <header class="fp-header">
-    <div class="fp-logo"><i class="fas fa-layer-group"></i> ForexPractice</div>
-    <div class="fp-search">
-        <i class="fas fa-search" style="color:var(--text-gray)"></i>
-        <input type="text" value="EUR/USD" readonly>
-    </div>
-    <div class="fp-nav">
-        <span>Dashboard</span>
-        <span>Analysis</span>
-        <span>Community</span>
-    </div>
-    <div class="fp-user">
-        <div class="wallet-box"><i class="fas fa-wallet" style="color:var(--active-green)"></i> $10,000.00</div>
-        <i class="far fa-bell" style="color:var(--text-gray); font-size: 18px; cursor:pointer;"></i>
-        <i class="fas fa-cog" style="color:var(--text-gray); font-size: 18px; cursor:pointer;"></i>
-        <div style="width:32px; height:32px; border-radius:50%; background:#444; overflow:hidden;"><img src="https://via.placeholder.com/32" alt="p"></div>
+    <div style="font-weight:700; font-size:18px;"><i class="fas fa-layer-group" style="color:var(--active-green)"></i> ForexPractice</div>
+    <div class="search-bar"><i class="fas fa-search" style="color:var(--text-gray)"></i><input type="text" value="EUR/USD"></div>
+    <div style="margin-left:auto; display:flex; gap:15px; align-items:center;">
+        <div style="background:#161b18; padding:8px 12px; border-radius:8px; font-weight:700; border:1px solid var(--border)">$10,000.00</div>
+        <i class="fas fa-cog" style="color:var(--text-dim)"></i>
     </div>
 </header>
 
-<div class="sub-tools">
-    <button class="tf-pill">1m</button>
-    <button class="tf-pill">5m</button>
-    <button class="tf-pill">15m</button>
-    <button class="tf-pill active">1h</button>
-    <button class="tf-pill">4h</button>
-    <button class="tf-pill">D</button>
-    <div style="width: 1px; height: 18px; background: #333; margin: 0 10px;"></div>
-    <span style="font-size: 14px; font-weight: 600;"><i class="fas fa-chart-line"></i> Indicators</span>
-</div>
-
-<div class="main-content">
-    <div class="left-toolbar">
+<div class="main-container">
+    <div class="left-tools">
         <i class="fas fa-mouse-pointer" style="color:var(--active-green)"></i>
         <i class="fas fa-pencil-alt"></i>
-        <i class="fas fa-slash"></i>
         <i class="fas fa-eraser"></i>
         <i class="fas fa-font"></i>
-        <i class="fas fa-draw-polygon"></i>
     </div>
-    
-    <div class="center-chart">
+
+    <div class="chart-area">
+        <div id="chart"></div>
+        <div class="play-ctrl">
+            <i class="fas fa-step-backward"></i>
+            <i class="fas fa-play-circle" style="font-size:30px; color:var(--active-green); cursor:pointer;"></i>
+            <i class="fas fa-step-forward"></i>
+            <div style="width:1px; height:20px; background:#444;"></div>
+            <span style="font-size:12px; font-weight:700;">1x</span>
         </div>
+    </div>
 
     <aside class="sidebar-right">
-        <div class="sim-head">
-            <h3>Market Simulator</h3>
-            <span class="tag-live">LIVE</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:15px;">Market Simulator</h3>
+            <span style="border:1px solid var(--active-green); color:var(--active-green); font-size:10px; padding:2px 5px; border-radius:4px;">LIVE</span>
         </div>
-        <div class="card-stat">
+        <div class="sim-card stat-grid">
             <div class="stat-box"><label>Balance</label><b>$10,000.00</b></div>
             <div class="stat-box"><label>Equity</label><b>$10,000.00</b></div>
         </div>
-        <div class="input-group">
-            <div class="in-wrap"><label style="font-size:11px; color:var(--text-gray); margin-bottom:5px; display:block;">Lots</label><input type="text" value="1.00"></div>
-            <div class="in-wrap"><label style="font-size:11px; color:var(--text-gray); margin-bottom:5px; display:block;">Risk %</label><input type="text" value="1.0"></div>
+        <div class="trade-btns">
+            <div class="t-btn sell"><span style="font-size:10px">SELL</span><span id="price-sell">1.08450</span></div>
+            <div class="t-btn buy"><span style="font-size:10px">BUY</span><span id="price-buy">1.08454</span></div>
         </div>
-        <div class="btn-row">
-            <div class="btn-trade sell"><span class="side">SELL</span><span class="price">1.08450</span></div>
-            <div class="btn-trade buy"><span class="side">BUY</span><span class="price">1.08454</span></div>
-        </div>
-
-        <div class="ad-section">
-            <span class="ad-label">SPONSORED</span>
-            <div class="ad-box">
-                <i class="fas fa-piggy-bank"></i>
-                <h4>High Yield Savings</h4>
-                <p>Earn up to 5.5% APY with our premium partner banks. FDIC Insured.</p>
-                <button class="btn-ad">Apply Now</button>
-            </div>
+        
+        <p style="font-size:10px; color:var(--text-dim); margin-top:30px;">SPONSORED</p>
+        <div class="sim-card" style="text-align:center; padding:20px;">
+            <i class="fas fa-piggy-bank" style="font-size:30px; color:var(--active-green); margin-bottom:10px;"></i>
+            <h4 style="margin:0 0 10px 0;">High Yield Savings</h4>
+            <button class="buy" style="width:100%; border:none; padding:10px; border-radius:6px; font-weight:800;">Apply Now</button>
         </div>
     </aside>
 </div>
+
+<script>
+    // 1. 차트 초기화
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+        layout: { backgroundColor: '#000000', textColor: '#d1d4dc' },
+        grid: { vertLines: { color: '#1f2328' }, horzLines: { color: '#1f2328' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        priceScale: { borderColor: '#1f2328' },
+        timeScale: { borderColor: '#1f2328', timeVisible: true }
+    });
+
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: '#00ff88', downColor: '#ef5350', borderVisible: false,
+        wickUpColor: '#00ff88', wickDownColor: '#ef5350'
+    });
+
+    // 2. 초기 데이터 생성 (연습용)
+    let lastClose = 1.08450;
+    let lastTime = Math.floor(Date.now() / 1000) - 300;
+    let data = [];
+    for(let i=0; i<100; i++) {
+        let open = lastClose;
+        let close = open + (Math.random() - 0.5) * 0.001;
+        data.push({ time: lastTime + (i * 60), open, high: Math.max(open, close) + 0.0002, low: Math.min(open, close) - 0.0002, close });
+        lastClose = close;
+    }
+    candleSeries.setData(data);
+
+    // [핵심] 3. Tick-by-Tick 실시간 엔진
+    setInterval(() => {
+        let lastCandle = data[data.length - 1];
+        let tickChange = (Math.random() - 0.5) * 0.0001;
+        lastCandle.close += tickChange;
+        lastCandle.high = Math.max(lastCandle.high, lastCandle.close);
+        lastCandle.low = Math.min(lastCandle.low, lastCandle.close);
+        
+        candleSeries.update(lastCandle);
+        
+        // 시뮬레이터 가격 업데이트
+        document.getElementById('price-sell').innerText = lastCandle.close.toFixed(5);
+        document.getElementById('price-buy').innerText = (lastCandle.close + 0.00004).toFixed(5);
+    }, 500); // 0.5초마다 틱 발생
+</script>
 
 </body>
 </html>
