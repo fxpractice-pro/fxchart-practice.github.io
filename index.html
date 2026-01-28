@@ -82,13 +82,13 @@
         }
 
         const chartElement = document.getElementById('chart-div');
-        const chart = LightweightCharts.createChart(chartElement, {
+        const chartObj = LightweightCharts.createChart(chartElement, {
             layout: { background: { color: '#000000' }, textColor: '#8b949e' },
             grid: { vertLines: { color: '#161b18' }, horzLines: { color: '#161b18' } },
             timeScale: { timeVisible: true, borderColor: '#1f2328' }
         });
 
-        const candleSeries = chart.addCandlestickSeries({
+        const candleSeries = chartObj.addCandlestickSeries({
             upColor: '#00ff88', downColor: '#ef5350', borderVisible: false,
             wickUpColor: '#00ff88', wickDownColor: '#ef5350'
         });
@@ -104,7 +104,7 @@
         }
         candleSeries.setData(data);
 
-        // 재생/일시정지 로직
+        // 재생/일시정지 로직 (image_db0ff4 기능 반영)
         let isRunning = false;
         const playBtn = document.getElementById('play-trigger');
         let lastCandle = data[data.length - 1];
@@ -114,6 +114,7 @@
             playBtn.className = isRunning ? "fas fa-pause-circle play-main-icon" : "fas fa-play-circle play-main-icon";
         };
 
+        // 실시간 틱 업데이트 시뮬레이션
         setInterval(() => {
             if(!isRunning) return;
             lastCandle.close += (Math.random() - 0.5) * 0.0001;
@@ -122,7 +123,7 @@
             candleSeries.update(lastCandle);
         }, 300);
 
-        window.onresize = () => chart.resize(chartElement.clientWidth, chartElement.clientHeight);
+        window.onresize = () => chartObj.resize(chartElement.clientWidth, chartElement.clientHeight);
     };
 </script>
 </body>
