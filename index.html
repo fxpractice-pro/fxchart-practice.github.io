@@ -2,204 +2,198 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>ForexPractice Master - Tick Engine</title>
+    <title>Forex Master - Professional Tick Engine</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --bg: #060d0a; --panel: #0b120f; --border: #1e2a24; --green: #00ff88; --red: #ef5350; --text: #d1d4dc; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; height: 100vh; overflow: hidden; }
-        
-        /* 차트 영역 */
         #chart-area { width: 100%; height: 100vh; position: relative; }
 
-        /* 드래그 가능한 플로팅 컨트롤 박스 */
+        /* 드래그 가능한 플로팅 컨트롤러 */
         #floating-ctrl {
             position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%);
             background: rgba(11, 18, 15, 0.9); border: 1px solid var(--border);
-            padding: 12px 25px; border-radius: 40px; z-index: 2000;
+            padding: 10px 25px; border-radius: 40px; z-index: 2000;
             display: flex; align-items: center; gap: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); cursor: move;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
         }
 
-        .ctrl-group { display: flex; align-items: center; gap: 15px; }
         .play-btn { 
-            background: var(--green); border: none; width: 45px; height: 45px; 
-            border-radius: 50%; color: black; cursor: pointer; font-size: 18px;
+            background: var(--green); border: none; width: 42px; height: 42px; 
+            border-radius: 50%; color: black; cursor: pointer; font-size: 16px;
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
-        .play-btn:hover { transform: scale(1.1); }
+        .play-btn:hover { transform: scale(1.1); background: #00e67a; }
         
         .speed-select {
             background: #16261f; border: 1px solid var(--border); color: white;
-            padding: 5px 10px; border-radius: 5px; outline: none; cursor: pointer;
+            padding: 6px 12px; border-radius: 20px; outline: none; cursor: pointer;
+            font-size: 13px; font-weight: bold;
         }
 
-        #time-display { font-family: monospace; font-size: 13px; color: #888; min-width: 150px; text-align: center; }
+        #status-info { font-family: 'Courier New', monospace; font-size: 12px; color: #888; min-width: 180px; text-align: right; }
+        .label { font-size: 11px; color: #555; text-transform: uppercase; margin-right: -10px; }
     </style>
 </head>
 <body>
 
     <div id="chart-area">
         <div id="floating-ctrl">
-            <div class="ctrl-group">
-                <i class="fas fa-backward tool-icon" style="cursor:pointer; color:#555;"></i>
-                <button class="play-btn" onclick="togglePlay()" id="play-icon">
-                    <i class="fas fa-play"></i>
-                </button>
-                <i class="fas fa-forward tool-icon" style="cursor:pointer; color:#555;"></i>
+            <button class="play-btn" onclick="togglePlay()" id="play-btn">
+                <i class="fas fa-play" id="play-icon"></i>
+            </button>
+
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span class="label">Speed</span>
+                <select class="speed-select" id="speed-selector" onchange="setSpeed(this.value)">
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="2">2x</option>
+                    <option value="5">5x</option>
+                    <option value="10">10x</option>
+                    <option value="50">50x</option>
+                </select>
             </div>
-            
-            <div style="width: 1px; height: 20px; background: #333;"></div>
 
-            <select class="speed-select" onchange="setSpeed(this.value)">
-                <option value="0.5">0.5x</option>
-                <option value="1" selected>1x</option>
-                <option value="2">2x</option>
-                <option value="5">5x</option>
-                <option value="10">10x</option>
-                <option value="50">50x</option>
-            </select>
-
-            <div id="time-display">READY</div>
+            <div id="status-info">
+                <span id="symbol-name" style="color:var(--green); margin-right:10px;">EUR/USD</span>
+                <span id="time-display">READY</span>
+            </div>
         </div>
     </div>
 
     <script>
-        // 1. 차트 설정
+        // 1. 차트 초기화
         const chart = LightweightCharts.createChart(document.getElementById('chart-area'), {
             layout: { background: { color: '#060d0a' }, textColor: '#d1d4dc' },
             grid: { vertLines: { color: '#111b16' }, horzLines: { color: '#111b16' } },
-            timeScale: { borderColor: '#1e2a24', timeVisible: true, secondsVisible: false }
+            timeScale: { borderColor: '#1e2a24', timeVisible: true, secondsVisible: false },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
         });
 
         const candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
             upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
         });
 
-        let allData = [], idx = 0;
+        let allData = [], idx = 100;
         let isPlaying = false;
-        let speed = 1; // 기본 배속
-        let progress = 0; // 0 ~ 1 사이의 진행도
-        let lastTimestamp = 0;
-        let currentHigh = 0;
-        let currentLow = 0;
+        let playbackSpeed = 1; 
+        let progress = 0; 
+        let lastFrameTime = 0;
+        let currentH = 0, currentL = 0;
 
-        // 2. 바이낸스 데이터 로드
-        async function init() {
-            const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=EURUSDT&interval=1h&limit=1000`);
-            const raw = await res.json();
-            allData = raw.map(d => ({
-                time: d[0] / 1000,
-                open: parseFloat(d[1]),
-                high: parseFloat(d[2]),
-                low: parseFloat(d[3]),
-                close: parseFloat(d[4])
-            }));
-
-            idx = 100; // 과거 데이터 100개 먼저 뿌림
-            candleSeries.setData(allData.slice(0, idx));
-            updateTimeDisplay();
+        // 2. 데이터 엔진
+        async function fetchHistory() {
+            try {
+                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=EURUSDT&interval=1h&limit=1000`);
+                const raw = await res.json();
+                allData = raw.map(d => ({
+                    time: d[0] / 1000,
+                    open: parseFloat(d[1]), high: parseFloat(d[2]), low: parseFloat(d[3]), close: parseFloat(d[4])
+                }));
+                candleSeries.setData(allData.slice(0, idx));
+                updateDisplay();
+            } catch (e) { console.error("Data Load Error"); }
         }
 
-        // 3. 틱 단위 애니메이션 엔진 (핵심)
-        function animate(timestamp) {
+        // 3. Tick-by-Tick 애니메이션 로직 (Fast Forward 개선)
+        function runEngine(timestamp) {
             if (!isPlaying) return;
-            if (!lastTimestamp) lastTimestamp = timestamp;
+            if (!lastFrameTime) lastFrameTime = timestamp;
 
-            const deltaTime = (timestamp - lastTimestamp) / 1000; // 초 단위 소요 시간
-            lastTimestamp = timestamp;
+            const delta = (timestamp - lastFrameTime) / 1000; 
+            lastFrameTime = timestamp;
 
-            // 배속에 따른 진행도 계산 (1x 속도일 때 1초에 한 봉이 완성되도록 설정됨)
-            progress += deltaTime * speed;
+            // 배속(playbackSpeed)이 높을수록 progress가 빨리 쌓여 캔들이 광속으로 그려집니다.
+            // 기본 1x일 때 약 1.5초마다 한 봉이 완성되도록 밸런스를 잡았습니다.
+            progress += delta * (playbackSpeed * 0.7); 
 
             if (progress >= 1) {
-                // 한 봉이 완성되면 다음 봉으로
-                while (progress >= 1) {
+                while(progress >= 1) {
                     progress -= 1;
                     idx++;
-                    if (idx >= allData.length) {
-                        togglePlay();
-                        return;
-                    }
+                    if (idx >= allData.length) { pause(); return; }
                 }
-                // 새 봉 시작 시 고가/저가 초기화
-                currentHigh = allData[idx].open;
-                currentLow = allData[idx].open;
-                updateTimeDisplay();
+                currentH = allData[idx].open;
+                currentL = allData[idx].open;
+                updateDisplay();
             }
 
             const candle = allData[idx];
+            let curPrice;
             
-            // 자연스러운 가격 움직임 시뮬레이션 (Tick-by-tick logic)
-            // progress 0~0.5: 시가 -> 고가/저가 도달 과정
-            // progress 0.5~1: 고가/저가 -> 종가 도달 과정
-            let currentClose;
+            // 캔들 내부 움직임 시뮬레이션
             if (progress < 0.5) {
-                const ratio = progress * 2;
-                currentClose = candle.open + (candle.high - candle.open) * ratio;
+                let p = progress * 2;
+                curPrice = candle.open + (candle.high - candle.open) * p;
             } else {
-                const ratio = (progress - 0.5) * 2;
-                currentClose = candle.high - (candle.high - candle.close) * ratio;
+                let p = (progress - 0.5) * 2;
+                curPrice = candle.high - (candle.high - candle.close) * p;
             }
 
-            // 고가와 저가는 실시간으로 갱신
-            currentHigh = Math.max(currentHigh, currentClose, candle.open);
-            currentLow = Math.min(currentLow, currentClose, candle.open);
+            currentH = Math.max(currentH, curPrice, candle.open);
+            currentL = Math.min(currentL, curPrice, candle.open);
 
             candleSeries.update({
                 time: candle.time,
                 open: candle.open,
-                high: currentHigh,
-                low: currentLow,
-                close: currentClose
+                high: currentH,
+                low: currentL,
+                close: curPrice
             });
 
-            requestAnimationFrame(animate);
+            requestAnimationFrame(runEngine);
         }
 
-        // 4. 제어 함수들
+        // 4. 컨트롤 함수
         function togglePlay() {
-            isPlaying = !isPlaying;
-            const btn = document.getElementById('play-icon');
-            if (isPlaying) {
-                btn.innerHTML = '<i class="fas fa-pause"></i>';
-                lastTimestamp = 0;
-                requestAnimationFrame(animate);
-            } else {
-                btn.innerHTML = '<i class="fas fa-play"></i>';
-            }
+            if (isPlaying) pause();
+            else play();
+        }
+
+        function play() {
+            isPlaying = true;
+            lastFrameTime = 0;
+            document.getElementById('play-icon').className = 'fas fa-pause';
+            requestAnimationFrame(runEngine);
+        }
+
+        function pause() {
+            isPlaying = false;
+            document.getElementById('play-icon').className = 'fas fa-play';
         }
 
         function setSpeed(val) {
-            speed = parseFloat(val);
+            playbackSpeed = parseFloat(val);
         }
 
-        function updateTimeDisplay() {
-            const date = new Date(allData[idx].time * 1000);
-            document.getElementById('time-display').innerText = date.toLocaleString();
+        function updateDisplay() {
+            const d = new Date(allData[idx].time * 1000);
+            document.getElementById('time-display').innerText = d.toLocaleString();
         }
 
-        // 5. 드래그 로직
-        const box = document.getElementById('floating-ctrl');
-        let drag = false, rx, ry;
-        box.onmousedown = (e) => {
-            if(e.target.tagName === 'SELECT') return; // 선택창 클릭시 드래그 방지
-            drag = true;
-            rx = e.clientX - box.offsetLeft;
-            ry = e.clientY - box.offsetTop;
+        // 5. 드래그 인터랙션
+        const ctrl = document.getElementById('floating-ctrl');
+        let isMoving = false, ox, oy;
+        ctrl.onmousedown = (e) => {
+            if(e.target.tagName === 'SELECT') return;
+            isMoving = true;
+            ox = e.clientX - ctrl.offsetLeft;
+            oy = e.clientY - ctrl.offsetTop;
         };
         document.onmousemove = (e) => {
-            if(drag) {
-                box.style.left = (e.clientX - rx) + 'px';
-                box.style.top = (e.clientY - ry) + 'px';
-                box.style.bottom = 'auto';
-                box.style.transform = 'none';
+            if(isMoving) {
+                ctrl.style.left = (e.clientX - ox) + 'px';
+                ctrl.style.top = (e.clientY - oy) + 'px';
+                ctrl.style.bottom = 'auto';
+                ctrl.style.transform = 'none';
             }
         };
-        document.onmouseup = () => drag = false;
+        document.onmouseup = () => isMoving = false;
 
-        init();
+        fetchHistory();
     </script>
 </body>
 </html>
