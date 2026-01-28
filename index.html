@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>ForexPractice - Fix Connection</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        :root { --bg: #060d0a; --panel: #0b120f; --border: #1e2a24; --green: #00ff88; --red: #ef5350; --text: #d1d4dc; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; height: 100vh; overflow: hidden; }
+        .tf-bar { height: 50px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 10px; }
+        .tf-btn { background: #16261f; border: 1px solid var(--border); color: var(--text); padding: 5px 12px; cursor: pointer; border-radius: 4px; font-size: 12px; }
+        .tf-btn.active { border-color: var(--green); color: var(--green); }
+        #main-container { display: flex; height: calc(100vh - 50px); }
+        #chart-area { flex: 1; position: relative; }
+        #floating-ctrl {
+            position: absolute; top: 20px; left: 20px; width: 220px;
+            background: rgba(11, 18, 15, 0.95); border: 1px solid var(--border);
+            border-radius: 12px; padding: 15px; z-index: 2000; cursor: move;
+        }
+        .speed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+        .speed-btn { background: #1c2c24; border: 1px solid var(--border); color: white; padding: 8px 0; cursor: pointer; font-size: 11px; border-radius: 4px; }
+        .speed-btn.active { background: var(--green); color: black; font-weight: bold; }
+        #play-btn { width:100%; padding:12px; background:var(--green); border:none; border-radius:6px; font-weight:bold; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="tf-bar">
+        <button class="tf-btn" onclick="loadData('EURUSDT')">EUR/USD</button>
+        <button class="tf-btn" onclick="loadData('GBPUSDT')">GBP/USD</button>
+        <button class="tf-btn" onclick="loadData('AUDUSDT')">AUD/USD</button>
+        <button class="tf-btn" onclick="loadData('BTCUSDT')">BTC/USD (Crypto)</button>
+    </div>
+
+    <div id="main-container">
+        <div id="chart-area">
+            <div id="floating-ctrl">
+                <div id="target-name" style="font-size: 11px; color: var(--green); margin-bottom: 8px; font-weight: bold; text-align:center;">READY</div>
+                <div class="speed-grid">
+                    <button class="speed-btn active" onclick="setSpeed(10)">10x</button>
+                    <button class="speed-btn" onclick="setSpeed(50)">50x</button>
+                    <button class="speed-btn" onclick="setSpeed(100)">100x</button>
+                </div>
+                <button id="play-btn" onclick="togglePlay()">▶ PLAY</button>
+            </div>
+        </div>
+        <aside style="width:280px; background:var(--panel); border-left:1px solid var(--border); padding:20px;">
+            <button style="width:100%; padding:12px; background:#1c2c24; border:1px solid var(--border); color:var(--green); font-weight:bold; border-radius:6px; cursor:pointer;" onclick="addMarker()">📌 BUY 마킹</button>
+        </aside>
+    </div>
+
+    <script>
+        const chart = LightweightCharts.createChart(document.getElementById('chart-area'), {
+            layout: { background: { color: '#060d0a' }, textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#111b16' }, horzLines: { color: '#111b16' } },
+            timeScale: { borderColor: '#1e2a24', timeVisible: true, rightOffset: 5 }
+        });
+        const candleSeries = chart.addSeries(LightweightCharts.CandlestickSeries, {
+            upColor: '#26a69a', downColor: '#ef5350', borderVisible: false, wickUpColor: '#26a69a', wickDownColor: '#ef5350'
+        });
+
+        let allData = [], markers = [], idx = 0, isPlaying = false;
+        let speed = 10, progress = 0, lastT = 0, rafId = null;
+        let curH = 0, curL = 0;
+
+        async function loadData(symbol) {
+            stop();
+            document.getElementById('target-name').innerText = "CONNECTING...";
+            try {
+                // 프록시 없이 직접 호출 (GitHub Pages 환경 권장)
+                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=1000`);
+                if (!res.ok) throw new Error("Network error");
+                
+                const raw = await res.json();
+                allData = raw.map(d => ({
+                    time: d[0] / 1000,
+                    open: parseFloat(d[1]),
+                    high: parseFloat(d[2]),
+                    low: parseFloat(d[3]),
+                    close: parseFloat(d[4])
+                }));
+
+                idx = 200;
+                markers = [];
+                candleSeries.setMarkers([]);
+                candleSeries.setData(allData.slice(0, idx));
+                document.getElementById('target-name').innerText = "LIVE: " + symbol;
+                
+                // 버튼 스타일 변경
+                document.querySelectorAll('.tf-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.innerText.replace('/', '') + 'T' === symbol || btn.innerText.includes(symbol.replace('USDT','')));
+                });
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('target-name').innerText = "ERROR";
+                alert("로컬 환경 보안(CORS) 때문에 차트 로드에 실패했습니다. GitHub Pages에 업로드하면 정상 작동합니다.");
+            }
+        }
+
+        // 재생 엔진 (기존과 동일)
+        function step(timestamp) {
+            if (!isPlaying) return;
+            if (!lastT) lastT = timestamp;
+            const dt = (timestamp - lastT) / 1000;
+            lastT = timestamp;
+            progress += dt * speed;
+            if (progress >= 1) {
+                while(progress >= 1) { progress -= 1; idx++; if (idx >= allData.length) { stop(); return; } }
+                curH = allData[idx].open; curL = allData[idx].open;
+            }
+            const candle = allData[idx];
+            const p = progress;
+            let c = (p < 0.5) ? candle.open + (candle.high - candle.open) * (p * 2) : candle.high - (candle.high - candle.close) * ((p - 0.5) * 2);
+            curH = Math.max(curH, c); curL = Math.min(curL, c);
+            candleSeries.update({ time: candle.time, open: candle.open, high: curH, low: curL, close: c });
+            rafId = requestAnimationFrame(step);
+        }
+
+        function togglePlay() {
+            if (isPlaying) stop();
+            else { isPlaying = true; lastT = 0; document.getElementById('play-btn').innerText = "⏸ PAUSE"; rafId = requestAnimationFrame(step); }
+        }
+
+        function stop() { isPlaying = false; if (rafId) cancelAnimationFrame(rafId); document.getElementById('play-btn').innerText = "▶ PLAY"; }
+        
+        function setSpeed(v) { speed = v; document.querySelectorAll('.speed-btn').forEach(b => b.classList.toggle('active', parseInt(b.innerText) === v)); }
+
+        function addMarker() {
+            markers.push({ time: allData[idx].time, position: 'belowBar', color: '#00ff88', shape: 'arrowUp', text: 'BUY' });
+            candleSeries.setMarkers(markers);
+        }
+
+        // 드래그 기능
+        const box = document.getElementById('floating-ctrl');
+        let drag = false, rx, ry;
+        box.onmousedown = (e) => { drag = true; rx = e.clientX - box.offsetLeft; ry = e.clientY - box.offsetTop; };
+        document.onmousemove = (e) => { if(drag) { box.style.left = (e.clientX-rx)+'px'; box.style.top = (e.clientY-ry)+'px'; } };
+        document.onmouseup = () => drag = false;
+
+        // 초기 데이터 로드 시도
+        loadData('EURUSDT');
+    </script>
+</body>
+</html>
